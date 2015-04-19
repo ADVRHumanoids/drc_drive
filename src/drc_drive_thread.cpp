@@ -37,8 +37,18 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_READY           ,    state::ready            ),
         //--------------------------------------+---------------------------------------------+----------------------------+
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT       ,    state::turning_left     ),
+	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT      ,    state::turning_right    ),
+	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE      ,    state::accelerating     ),
+	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_DECELERATE      ,    state::decelerating     ),
         //--------------------------------------+---------------------------------------------+----------------------------+
-        std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::turned_left      ),
+        std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
+        //--------------------------------------+---------------------------------------------+----------------------------+
+        std::make_tuple( state::turning_right   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
+        //--------------------------------------+---------------------------------------------+----------------------------+
+        std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
+        //--------------------------------------+---------------------------------------------+----------------------------+
+        std::make_tuple( state::decelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
+        //--------------------------------------+---------------------------------------------+----------------------------+
     };
     
     state_map[state::idle] = "idle";

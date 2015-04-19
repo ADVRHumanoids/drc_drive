@@ -138,7 +138,6 @@ bool walkman::drc::drive::drive_actions::get_drive_data(std::string Frame, KDL::
 
 bool walkman::drc::drive::drive_actions::init_turning_left(double angle)
 {   
-    std::cout<<"INIT TURNING LEFT"<<std::endl;
     double time_f = 15.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
@@ -171,11 +170,33 @@ bool walkman::drc::drive::drive_actions::perform_turning_left()
 
 bool walkman::drc::drive::drive_actions::init_turning_right(double angle)
 {        
+    double time_f = 15.0;
+    YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
+    
+    KDL::Frame world_SteeringWheel;
+    
+    world_SteeringWheel.p.data[0] = world_InitialLhand.p.data[0] + 0.05;
+    world_SteeringWheel.p.data[1] = world_InitialLhand.p.data[1] - STEERING_WHEEL_RADIUS;
+    world_SteeringWheel.p.data[2] = world_InitialLhand.p.data[2];
+    world_SteeringWheel.M = KDL::Rotation::Identity();
+    
+    left_arm_generator.circle_initialize(time_f, STEERING_WHEEL_RADIUS, angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
+    initialized_time=yarp::os::Time::now();
+    
     return true;
 }
 
 bool walkman::drc::drive::drive_actions::perform_turning_right()
 {   
+    auto time = yarp::os::Time::now()-initialized_time;
+    KDL::Frame Xd_L;
+    KDL::Twist dXd_L;
+   
+    left_arm_generator.circle_trajectory(time, Xd_L, dXd_L);
+    // forcing the initial orientation during the trajectory
+    Xd_L.M = world_InitialLhand.M;   
+    left_arm_task->setReference(KDLtoYarp_position(Xd_L));
+    
     return true;
 }
 

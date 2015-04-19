@@ -11,6 +11,9 @@
  * 
  * @author 
  */
+
+using namespace walkman::drc::drive;
+
 class drc_drive_module : public control_module<drc_drive_thread> {
 public:
     

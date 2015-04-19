@@ -106,8 +106,8 @@ bool drc_drive_thread::custom_init()
         else
             left_arm_active_joints[i] = false;
     }
-    for(unsigned int i = 0; i < 3; ++i)
-        left_arm_active_joints[model.torso.joint_numbers[i]] = true;
+    //for(unsigned int i = 0; i < 3; ++i)
+        //left_arm_active_joints[model.torso.joint_numbers[i]] = true;
     left_arm_task->setActiveJointsMask(left_arm_active_joints);
 
     first_cartesian_tasks_list.push_back(left_foot_task);
@@ -194,7 +194,6 @@ void drc_drive_thread::run()
     state new_state=stateMachine.evolve_state_machine(current_state,drive_cmd.command);
     if (current_state!=new_state)
     {
-	std::cout<<"New state detected!"<<std::endl;
 	init_actions(new_state);
 	current_state = new_state;
     }

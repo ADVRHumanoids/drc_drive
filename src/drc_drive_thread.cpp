@@ -95,26 +95,41 @@ bool drc_drive_thread::custom_init()
 
     // update model and com_model
     //model.iDyn3_model.setFloatingBaseLink(model.right_leg.end_effector_index);
+    model.switchAnchorAndFloatingBase("Waist");
     model.updateiDyn3Model(input.q, true);
     
     // SOT INITIALIZATION
     
     // tasks initialization
-    left_foot_task = Cartesian::Ptr( new Cartesian("6d::l_foot::world", input.q, model,"l_sole","world"));
+    left_foot_task = Cartesian::Ptr( new Cartesian("6d::l_foot::world", input.q, model,"LFoot","world"));
     left_foot_task->setOrientationErrorGain(0.1);
     Yleft_foot_task = YCartesian::Ptr( new YCartesian(model.getRobotName(), get_module_prefix(), left_foot_task));
+    
+    //TODO see if it's really needed 
+//     std::vector<bool> left_foot_active_joints = left_foot_task->getActiveJointsMask();
+//     for(unsigned int i = 0; i < left_foot_active_joints.size(); ++i)
+//     {
+//       std::vector<unsigned int>::iterator it = std::find(model.left_leg.joint_numbers.begin(), model.left_leg.joint_numbers.end(), i);
+//       // for the acceleration task, only the pitch joint of the foot is needed
+//       if(it == model.left_leg.joint_numbers.end() - 1)
+// 	  left_foot_active_joints[i] = true;
+//       else
+// 	  left_foot_active_joints[i] = false;
+//     }
+//     left_foot_task->setActiveJointsMask(left_foot_active_joints);
 
     left_arm_task = Cartesian::Ptr( new Cartesian("6d::l_arm::world", input.q, model,"LSoftHand","world"));
     left_arm_task->setOrientationErrorGain(0.1);
     Yleft_arm_task = YCartesian::Ptr( new YCartesian(model.getRobotName(), get_module_prefix(), left_arm_task));
     
     std::vector<bool> left_arm_active_joints = left_arm_task->getActiveJointsMask();
-    for(unsigned int i = 0; i < left_arm_active_joints.size(); ++i){
-        std::vector<unsigned int>::iterator it = std::find(model.left_arm.joint_numbers.begin(), model.left_arm.joint_numbers.end(), i);
-        if(it != model.left_arm.joint_numbers.end())
-            left_arm_active_joints[i] = true;
-        else
-            left_arm_active_joints[i] = false;
+    for(unsigned int i = 0; i < left_arm_active_joints.size(); ++i)
+    {
+      std::vector<unsigned int>::iterator it = std::find(model.left_arm.joint_numbers.begin(), model.left_arm.joint_numbers.end(), i);
+      if(it != model.left_arm.joint_numbers.end())
+	  left_arm_active_joints[i] = true;
+      else
+	  left_arm_active_joints[i] = false;
     }
     //for(unsigned int i = 0; i < 3; ++i)
         //left_arm_active_joints[model.torso.joint_numbers[i]] = true;

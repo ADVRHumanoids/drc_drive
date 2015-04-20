@@ -33,23 +33,27 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
 
     //STATE MACHINE
     std::vector<std::tuple<state,std::string,state>> transition_table{
-        //--------------initial state ----------+--------- command ---------------------------+------ final state--------- +
-        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_READY           ,    state::ready            ),
-        //--------------------------------------+---------------------------------------------+----------------------------+
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT       ,    state::turning_left     ),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT      ,    state::turning_right    ),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE      ,    state::accelerating     ),
-        //--------------------------------------+---------------------------------------------+----------------------------+
-        std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
-        //--------------------------------------+---------------------------------------------+----------------------------+
-        std::make_tuple( state::turning_right   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
-        //--------------------------------------+---------------------------------------------+----------------------------+
-        std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
-        //--------------------------------------+---------------------------------------------+----------------------------+
+        //--------------initial state ----------+--------- command --------------------------------+------ final state--------- +
+        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::aligning_hand   ),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::aligning_hand   ,   WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND           ,    state::ready            ),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
+	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
+	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::turning_right   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
     };
     
     state_map[state::idle] = "idle";
     state_map[state::ready] = "ready";
+    state_map[state::aligning_hand] = "aligning_hand";
+    state_map[state::aligned_hand] = "aligned_hand";
     state_map[state::turning_left] = "turning_left";
     state_map[state::turned_left] = "turned_left";
     state_map[state::turning_right] = "turning_right";
@@ -183,6 +187,10 @@ void drc_drive_thread::init_actions(state new_state)
     if ( new_state == state::ready)
     {
     }
+    if ( new_state == state::aligning_hand)
+    {
+	drive_traj.init_aligning_hand();
+    }
     if ( new_state == state::turning_left)
     {
 	steering_angle = -drive_cmd.angle;
@@ -213,6 +221,9 @@ void drc_drive_thread::run()
 	current_state = new_state;
     }
     
+    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND ) {
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Aligning hand with X normal wrt steering wheel ..." << std::endl;
+    }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Accelerating ..." << std::endl;
     }
@@ -234,10 +245,10 @@ void drc_drive_thread::run()
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Controlling now BOTH hands ..." << std::endl;
 	drive_traj.set_controlled_arms(true,true);
     }
-    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_DRIVE_DATA_SENT ) 
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA ) 
     {
 	std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Steering wheel data received ..." << std::endl;
-	drive_traj.get_drive_data(drive_cmd.frame, drive_cmd.drive_data, drive_cmd.radius, model);
+	drive_traj.get_steering_wheel_data(drive_cmd.frame, drive_cmd.drive_data, drive_cmd.radius, model);
     }
     
     sense();
@@ -266,6 +277,11 @@ void drc_drive_thread::control_law()
     
     bool success=false;
     
+    if ( current_state == state::aligning_hand )
+    {
+	if(!drive_traj.perform_aligning_hand()){ std::cout<<"ERROR ALIGNING HAND"<<std::endl; success=false;}
+	else success=true;
+    }
     if ( current_state == state::turning_left )
     {
 	if(!drive_traj.perform_turning_left()){ std::cout<<"ERROR TURNING LEFT"<<std::endl; success=false;}

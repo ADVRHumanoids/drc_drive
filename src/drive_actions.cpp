@@ -19,14 +19,14 @@
 
 walkman::drc::drive::drive_actions::drive_actions()
 {
-    drive_data.resize(7);
-    drive_data[X_INDEX] = 0.0;
-    drive_data[Y_INDEX] = 0.0;
-    drive_data[Z_INDEX] = 0.0;
-    drive_data[ROLL_INDEX] = 0.0;
-    drive_data[PITCH_INDEX] = 0.0;
-    drive_data[YAW_INDEX] = 0.0;
-    drive_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS;
+    steering_wheel_data.resize(7);
+    steering_wheel_data[X_INDEX] = 0.0;
+    steering_wheel_data[Y_INDEX] = 0.0;
+    steering_wheel_data[Z_INDEX] = 0.0;
+    steering_wheel_data[ROLL_INDEX] = 0.0;
+    steering_wheel_data[PITCH_INDEX] = 0.0;
+    steering_wheel_data[YAW_INDEX] = 0.0;
+    steering_wheel_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS;
     
     left_arm_controlled = true;
     right_arm_controlled = false;
@@ -92,58 +92,82 @@ void walkman::drc::drive::drive_actions::get_left_foot_cartesian_error(KDL::Vect
     compute_cartesian_error(world_CurrentLfoot,world_FinalLfoot,position_error,orientation_error);
 }
 
-bool walkman::drc::drive::drive_actions::get_drive_data(std::string Frame, KDL::Frame drive_data_, double radius, iDynUtils& model_)
+bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Frame, KDL::Frame steering_wheel_data_, double radius, iDynUtils& model_)
 {
     ref_frame = Frame;
-    drive_data[RADIUS_INDEX] = radius;
+    steering_wheel_data[RADIUS_INDEX] = radius;
     if (ref_frame != "world")
     {
 	KDL::Frame Frame_data, Anchor_World, World_data, Anchor_Frame;
-	Frame_data = drive_data_;
+	Frame_data = steering_wheel_data_;
 	Anchor_World = model_.getAnchor_T_World();
 	Anchor_Frame = model_.iDyn3_model.getPositionKDL(model_.iDyn3_model.getLinkIndex(model_.getAnchor()),model_.iDyn3_model.getLinkIndex(ref_frame));
 	World_data = Anchor_World.Inverse() * Anchor_Frame * Frame_data;
-	drive_data[X_INDEX] = World_data.p.x();
-	drive_data[Y_INDEX] = World_data.p.y();
-	drive_data[Z_INDEX] = World_data.p.z();
+	steering_wheel_data[X_INDEX] = World_data.p.x();
+	steering_wheel_data[Y_INDEX] = World_data.p.y();
+	steering_wheel_data[Z_INDEX] = World_data.p.z();
 	double ro,pi,ya;
 	World_data.M.GetRPY(ro,pi,ya);
-	drive_data[ROLL_INDEX] = ro;
-	drive_data[PITCH_INDEX] = pi;
-	drive_data[YAW_INDEX] = ya;
+	steering_wheel_data[ROLL_INDEX] = ro;
+	steering_wheel_data[PITCH_INDEX] = pi;
+	steering_wheel_data[YAW_INDEX] = ya;
     } 
     else
     {
-	drive_data[X_INDEX] = drive_data_.p.x();
-	drive_data[Y_INDEX] = drive_data_.p.y();
-	drive_data[Z_INDEX] = drive_data_.p.z();
+	steering_wheel_data[X_INDEX] = steering_wheel_data_.p.x();
+	steering_wheel_data[Y_INDEX] = steering_wheel_data_.p.y();
+	steering_wheel_data[Z_INDEX] = steering_wheel_data_.p.z();
 	double ro,pi,ya;
-	drive_data_.M.GetRPY(ro,pi,ya);
-	drive_data[ROLL_INDEX] = ro;
-	drive_data[PITCH_INDEX] = pi;
-	drive_data[YAW_INDEX] = ya;	
+	steering_wheel_data_.M.GetRPY(ro,pi,ya);
+	steering_wheel_data[ROLL_INDEX] = ro;
+	steering_wheel_data[PITCH_INDEX] = pi;
+	steering_wheel_data[YAW_INDEX] = ya;	
     }
 
-    std::cout<<"Drive Data Received:"<<std::endl;
-    std::cout<<"| x: "<<drive_data[X_INDEX]<<std::endl;
-    std::cout<<"| y: "<<drive_data[Y_INDEX]<<std::endl;
-    std::cout<<"| z: "<<drive_data[Z_INDEX]<<std::endl;
-    std::cout<<"| roll: "<<drive_data[ROLL_INDEX]<<std::endl;
-    std::cout<<"| pitch: "<<drive_data[PITCH_INDEX]<<std::endl;
-    std::cout<<"| yaw: "<<drive_data[YAW_INDEX]<<std::endl;
-    std::cout<<"| radius: "<<drive_data[RADIUS_INDEX]<<std::endl;
+    std::cout<<"Steering Wheel Data Received:"<<std::endl;
+    std::cout<<"| x: "<<steering_wheel_data[X_INDEX]<<std::endl;
+    std::cout<<"| y: "<<steering_wheel_data[Y_INDEX]<<std::endl;
+    std::cout<<"| z: "<<steering_wheel_data[Z_INDEX]<<std::endl;
+    std::cout<<"| roll: "<<steering_wheel_data[ROLL_INDEX]<<std::endl;
+    std::cout<<"| pitch: "<<steering_wheel_data[PITCH_INDEX]<<std::endl;
+    std::cout<<"| yaw: "<<steering_wheel_data[YAW_INDEX]<<std::endl;
+    std::cout<<"| radius: "<<steering_wheel_data[RADIUS_INDEX]<<std::endl;
+    
+    return true;
+}
+
+bool walkman::drc::drive::drive_actions::init_aligning_hand()
+{
+  double time_f = 15.0;
+  YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
+  
+  
+  //TODO write the Lhand final pose wrt SteeringWheel
+  //world_SteeringWheel.p = world_InitialLhand.p;
+  //world_SteeringWheel.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
+  
+  left_arm_generator.line_initialize(time_f,world_InitialLhand,world_FinalLhand);
+  initialized_time=yarp::os::Time::now();
+  
+  return true;
+}
+
+bool walkman::drc::drive::drive_actions::perform_aligning_hand()
+{
+    auto time = yarp::os::Time::now()-initialized_time;
+    KDL::Frame Xd_LH;
+    KDL::Twist dXd_LH;
+   
+    left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
+    left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
     
     return true;
 }
 
 bool walkman::drc::drive::drive_actions::init_turning_left(double angle)
 {   
-    double time_f = 15.0;
+    double time_f = 5.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
-    
-    std::cout<<"X: "<<world_InitialLhand.p(0)<<" Y: "<<world_InitialLhand.p(1)<<" Z: "<<world_InitialLhand.p(2)<<std::endl;
-    
-    KDL::Frame world_SteeringWheel;
     
     world_SteeringWheel.p.data[0] = world_InitialLhand.p.data[0] + 0.05;
     world_SteeringWheel.p.data[1] = world_InitialLhand.p.data[1] - STEERING_WHEEL_RADIUS;
@@ -228,10 +252,10 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     KDL::Frame Xd_LF;
     KDL::Twist dXd_LF;
    
-    if (time <= 2.5)
+    if (time <= push_time)
       left_foot_generator_push.line_trajectory(time, Xd_LF, dXd_LF);
     else
-      left_foot_generator_release.line_trajectory(time, Xd_LF, dXd_LF);
+      left_foot_generator_release.line_trajectory(time-push_time, Xd_LF, dXd_LF);
     
     
     Xd_LF.p = world_InitialLfoot.p;

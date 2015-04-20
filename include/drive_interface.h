@@ -8,7 +8,8 @@
 #define WALKMAN_DRC_DRIVE_COMMAND_IDLE "idle"
 #define WALKMAN_DRC_DRIVE_COMMAND_READY "ready"
 
-#define WALKMAN_DRC_DRIVE_COMMAND_DRIVE_DATA_SENT "drivedatasent"
+#define WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA "steeringwheeldatasent"
+#define WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND "align_hand"
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT "turn_left"
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT "turn_right"
 #define WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE "accelerate"
@@ -57,6 +58,8 @@ namespace walkman
 	    enum class state {
                 idle,
                 ready,
+		aligning_hand,
+		aligned_hand,
 		turning_left,
 		turned_left,
 		turning_right,

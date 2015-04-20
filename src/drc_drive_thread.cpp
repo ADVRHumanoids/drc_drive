@@ -39,15 +39,12 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT       ,    state::turning_left     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT      ,    state::turning_right    ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE      ,    state::accelerating     ),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_DECELERATE      ,    state::decelerating     ),
         //--------------------------------------+---------------------------------------------+----------------------------+
         std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
         //--------------------------------------+---------------------------------------------+----------------------------+
         std::make_tuple( state::turning_right   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
         //--------------------------------------+---------------------------------------------+----------------------------+
         std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
-        //--------------------------------------+---------------------------------------------+----------------------------+
-        std::make_tuple( state::decelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE     ,    state::ready		   ),
         //--------------------------------------+---------------------------------------------+----------------------------+
     };
     
@@ -59,9 +56,6 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     state_map[state::turned_right] = "turned_right";
     state_map[state::accelerating] = "accelerating";
     state_map[state::accelerated] = "accelerated";
-    state_map[state::decelerating] = "decelerating";
-    state_map[state::decelerated] = "decelerated";
-    
     
     stateMachine.insert(transition_table);
     
@@ -203,10 +197,6 @@ void drc_drive_thread::init_actions(state new_state)
     {
 	drive_traj.init_accelerating();
     }
-    if ( new_state == state::decelerating)
-    {
-	drive_traj.init_decelerating();
-    }
 }
 
 void drc_drive_thread::run()
@@ -223,6 +213,9 @@ void drc_drive_thread::run()
 	current_state = new_state;
     }
     
+    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE ) {
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Accelerating ..." << std::endl;
+    }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Turning LEFT ..." << std::endl;
     }
@@ -286,11 +279,6 @@ void drc_drive_thread::control_law()
     if ( current_state == state::accelerating )
     {
 	if(!drive_traj.perform_accelerating()){ std::cout<<"ERROR ACCELERATING"<<std::endl; success=false;}
-	else success=true;
-    }
-    if ( current_state == state::decelerating )
-    {
-	if(!drive_traj.perform_decelerating()){ std::cout<<"ERROR DECELERATING"<<std::endl; success=false;}
 	else success=true;
     }
     

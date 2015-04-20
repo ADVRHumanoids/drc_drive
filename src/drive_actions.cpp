@@ -204,15 +204,19 @@ bool walkman::drc::drive::drive_actions::perform_turning_right()
 
 bool walkman::drc::drive::drive_actions::init_accelerating()
 {        
-    double time_f = 5.0;
+    double left_foot_pitch = 15*DEG2RAD;
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     
-    std::cout<<"X: "<<world_InitialLfoot.p(0)<<" Y: "<<world_InitialLfoot.p(1)<<" Z: "<<world_InitialLfoot.p(2)<<std::endl;
+    //std::cout<<"X: "<<world_InitialLfoot.p(0)<<" Y: "<<world_InitialLfoot.p(1)<<" Z: "<<world_InitialLfoot.p(2)<<std::endl;
     
     world_FinalLfoot.p = world_InitialLfoot.p;
-    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(15*DEG2RAD);
+    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(left_foot_pitch);
     
-    left_foot_generator.line_initialize(time_f,world_InitialLfoot,world_FinalLfoot);
+    push_time = 2.0;
+    release_time = 1.0;
+    
+    left_foot_generator_push.line_initialize(push_time,world_InitialLfoot,world_FinalLfoot);
+    left_foot_generator_release.line_initialize(release_time,world_FinalLfoot,world_InitialLfoot);
     initialized_time=yarp::os::Time::now();
     
     return true;
@@ -224,41 +228,15 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     KDL::Frame Xd_LF;
     KDL::Twist dXd_LF;
    
-    left_foot_generator.line_trajectory(time, Xd_LF, dXd_LF); 
+    if (time <= 2.5)
+      left_foot_generator_push.line_trajectory(time, Xd_LF, dXd_LF);
+    else
+      left_foot_generator_release.line_trajectory(time, Xd_LF, dXd_LF);
+    
+    
     Xd_LF.p = world_InitialLfoot.p;
     left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
    
-    return true;
-}
-
-bool walkman::drc::drive::drive_actions::init_decelerating()
-{       
-    double time_f = 5.0;
-    YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
-    
-    std::cout<<"X: "<<world_InitialLfoot.p(0)<<" Y: "<<world_InitialLfoot.p(1)<<" Z: "<<world_InitialLfoot.p(2)<<std::endl;
-    
-    world_FinalLfoot.p = world_InitialLfoot.p;
-    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(-15*DEG2RAD);
-    
-    left_foot_generator.line_initialize(time_f,world_InitialLfoot,world_FinalLfoot);
-    initialized_time=yarp::os::Time::now();
-    
-    return true;
-    return true;
-}
-
-bool walkman::drc::drive::drive_actions::perform_decelerating()
-{   
-    auto time = yarp::os::Time::now()-initialized_time;
-    KDL::Frame Xd_LF;
-    KDL::Twist dXd_LF;
-   
-    left_foot_generator.line_trajectory(time, Xd_LF, dXd_LF); 
-    Xd_LF.p = world_InitialLfoot.p;
-    left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
-   
-    return true;
     return true;
 }
 

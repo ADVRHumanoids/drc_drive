@@ -26,6 +26,7 @@ namespace walkman
 		// kdl frames for initial and final cartesian poses
 		KDL::Frame world_InitialRhand,world_InitialLhand,world_InitialLfoot;
 		KDL::Frame world_FinalRhand,world_FinalLhand,world_FinalLfoot;
+		KDL::Frame world_LhandHome, world_LfootHome;
 		
 		// local sot tasks
 		OpenSoT::tasks::velocity::Cartesian::Ptr left_arm_task;
@@ -35,7 +36,11 @@ namespace walkman
 		// trajectory generators for all tasks
 		trajectory_generator left_arm_generator;
 		trajectory_generator right_arm_generator;
-		trajectory_generator left_foot_generator;
+		trajectory_generator left_foot_generator_push;
+		trajectory_generator left_foot_generator_release;
+		
+		double push_time;
+		double release_time;
 		
 		double initialized_time;
 		
@@ -66,9 +71,6 @@ namespace walkman
 		
 		bool init_accelerating();
 		bool perform_accelerating();
-		
-		bool init_decelerating();
-		bool perform_decelerating();
 		
 		void get_left_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);
 		void get_right_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);

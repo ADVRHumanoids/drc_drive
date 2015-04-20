@@ -12,7 +12,6 @@
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT "turn_left"
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT "turn_right"
 #define WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE "accelerate"
-#define WALKMAN_DRC_DRIVE_COMMAND_DECELERATE "decelerate"
 
 #define WALKMAN_DRC_DRIVE_COMMAND_GRASP "grasp"
 #define WALKMAN_DRC_DRIVE_COMMAND_UNGRASP "ungrasp"
@@ -29,7 +28,6 @@
 #define WALKMAN_DRC_DRIVE_STATUS_TURN_LEFT "turning_left"
 #define WALKMAN_DRC_DRIVE_STATUS_TURN_RIGHT "turning_right"
 #define WALKMAN_DRC_DRIVE_STATUS_ACCELERATE "accelerating"
-#define WALKMAN_DRC_DRIVE_STATUS_DECELERATE "decelerating"
 #define WALKMAN_DRC_DRIVE_STATUS_GRASPING "grasping"
 #define WALKMAN_DRC_DRIVE_STATUS_GRASPED "grasped"
 
@@ -65,8 +63,6 @@ namespace walkman
 		turned_right,
 		accelerating,
 		accelerated,
-		decelerating,
-		decelerated,
 		grasping,
 		ungrasping
 	    };

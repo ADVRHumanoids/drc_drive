@@ -58,6 +58,7 @@ namespace walkman
 	    enum class state {
                 idle,
                 ready,
+		data_received,
 		aligning_hand,
 		aligned_hand,
 		turning_left,

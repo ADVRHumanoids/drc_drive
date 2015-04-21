@@ -16,6 +16,7 @@
 #define RADIUS_INDEX 6
 
 #define STEERING_WHEEL_RADIUS 0.18
+#define HAND_STEERINGWHEEL_OFFSET 0.2
 
 walkman::drc::drive::drive_actions::drive_actions()
 {
@@ -121,7 +122,7 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
 	steering_wheel_data_.M.GetRPY(ro,pi,ya);
 	steering_wheel_data[ROLL_INDEX] = ro;
 	steering_wheel_data[PITCH_INDEX] = pi;
-	steering_wheel_data[YAW_INDEX] = ya;	
+	steering_wheel_data[YAW_INDEX] = ya;
     }
 
     std::cout<<"Steering Wheel Data Received:"<<std::endl;
@@ -138,13 +139,23 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
 
 bool walkman::drc::drive::drive_actions::init_aligning_hand()
 {
-  double time_f = 15.0;
+  double time_f = 5.0;
   YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
   
+  KDL::Frame world_tempLhand;
+  KDL::Frame tempLhand_finalLhand;
   
   //TODO write the Lhand final pose wrt SteeringWheel
-  //world_SteeringWheel.p = world_InitialLhand.p;
-  //world_SteeringWheel.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
+  world_tempLhand.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);
+  world_tempLhand.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
+  world_tempLhand.M = world_tempLhand.M*KDL::Rotation::RotY(-90*DEG2RAD);
+  
+  tempLhand_finalLhand.p.data[X_INDEX] = HAND_STEERINGWHEEL_OFFSET;
+  tempLhand_finalLhand.p.data[Y_INDEX] = 0;
+  tempLhand_finalLhand.p.data[Z_INDEX] = -steering_wheel_data[RADIUS_INDEX];
+  tempLhand_finalLhand.M = KDL::Rotation::Identity();
+  
+  world_FinalLhand = world_tempLhand*tempLhand_finalLhand;
   
   left_arm_generator.line_initialize(time_f,world_InitialLhand,world_FinalLhand);
   initialized_time=yarp::os::Time::now();
@@ -169,9 +180,9 @@ bool walkman::drc::drive::drive_actions::init_turning_left(double angle)
     double time_f = 5.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
-    world_SteeringWheel.p.data[0] = world_InitialLhand.p.data[0] + 0.05;
-    world_SteeringWheel.p.data[1] = world_InitialLhand.p.data[1] - STEERING_WHEEL_RADIUS;
-    world_SteeringWheel.p.data[2] = world_InitialLhand.p.data[2];
+    world_SteeringWheel.p.data[X_INDEX] = world_InitialLhand.p.data[X_INDEX] + 0.05;
+    world_SteeringWheel.p.data[Y_INDEX] = world_InitialLhand.p.data[Y_INDEX] - STEERING_WHEEL_RADIUS;
+    world_SteeringWheel.p.data[Z_INDEX] = world_InitialLhand.p.data[Z_INDEX];
     world_SteeringWheel.M = KDL::Rotation::Identity();
     
     left_arm_generator.circle_initialize(time_f, STEERING_WHEEL_RADIUS, angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);

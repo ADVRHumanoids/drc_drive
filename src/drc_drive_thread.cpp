@@ -34,9 +34,11 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     //STATE MACHINE
     std::vector<std::tuple<state,std::string,state>> transition_table{
         //--------------initial state ----------+--------- command --------------------------------+------ final state--------- +
-        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::aligning_hand   ),
+        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::data_received    ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::aligning_hand   ,   WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND           ,    state::ready            ),
+        std::make_tuple( state::data_received   ,   WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND           ,    state::aligning_hand    ),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::aligning_hand   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
@@ -52,6 +54,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     
     state_map[state::idle] = "idle";
     state_map[state::ready] = "ready";
+    state_map[state::data_received] = "data_received";
     state_map[state::aligning_hand] = "aligning_hand";
     state_map[state::aligned_hand] = "aligned_hand";
     state_map[state::turning_left] = "turning_left";

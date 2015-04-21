@@ -65,11 +65,8 @@ namespace walkman
 		bool init_aligning_hand();
 		bool perform_aligning_hand();
 		
-		bool init_turning_left(double angle);
-		bool perform_turning_left();
-		
-		bool init_turning_right(double angle);
-		bool perform_turning_right();
+		bool init_turning(double angle);
+		bool perform_turning();
 		
 		bool init_accelerating();
 		bool perform_accelerating();

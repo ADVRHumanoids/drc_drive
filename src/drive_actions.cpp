@@ -175,55 +175,21 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::init_turning_left(double angle)
+bool walkman::drc::drive::drive_actions::init_turning(double angle)
 {   
     double time_f = 5.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
-    world_SteeringWheel.p.data[X_INDEX] = world_InitialLhand.p.data[X_INDEX] + 0.05;
-    world_SteeringWheel.p.data[Y_INDEX] = world_InitialLhand.p.data[Y_INDEX] - STEERING_WHEEL_RADIUS;
-    world_SteeringWheel.p.data[Z_INDEX] = world_InitialLhand.p.data[Z_INDEX];
+    world_SteeringWheel.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);
     world_SteeringWheel.M = KDL::Rotation::Identity();
     
-    left_arm_generator.circle_initialize(time_f, STEERING_WHEEL_RADIUS, angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
+    left_arm_generator.circle_initialize(time_f, steering_wheel_data[RADIUS_INDEX], angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
     initialized_time=yarp::os::Time::now();
     
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::perform_turning_left()
-{   
-    auto time = yarp::os::Time::now()-initialized_time;
-    KDL::Frame Xd_LH;
-    KDL::Twist dXd_LH;
-   
-    left_arm_generator.circle_trajectory(time, Xd_LH, dXd_LH);
-    // forcing the initial orientation during the trajectory
-    Xd_LH.M = world_InitialLhand.M;   
-    left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
-    
-    return true;
-}
-
-bool walkman::drc::drive::drive_actions::init_turning_right(double angle)
-{        
-    double time_f = 15.0;
-    YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
-    
-    KDL::Frame world_SteeringWheel;
-    
-    world_SteeringWheel.p.data[0] = world_InitialLhand.p.data[0] + 0.05;
-    world_SteeringWheel.p.data[1] = world_InitialLhand.p.data[1] - STEERING_WHEEL_RADIUS;
-    world_SteeringWheel.p.data[2] = world_InitialLhand.p.data[2];
-    world_SteeringWheel.M = KDL::Rotation::Identity();
-    
-    left_arm_generator.circle_initialize(time_f, STEERING_WHEEL_RADIUS, angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
-    initialized_time=yarp::os::Time::now();
-    
-    return true;
-}
-
-bool walkman::drc::drive::drive_actions::perform_turning_right()
+bool walkman::drc::drive::drive_actions::perform_turning()
 {   
     auto time = yarp::os::Time::now()-initialized_time;
     KDL::Frame Xd_LH;

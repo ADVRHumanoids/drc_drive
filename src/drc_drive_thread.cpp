@@ -197,12 +197,12 @@ void drc_drive_thread::init_actions(state new_state)
     if ( new_state == state::turning_left)
     {
 	steering_angle = -drive_cmd.angle;
-	drive_traj.init_turning_left(steering_angle);
+	drive_traj.init_turning(steering_angle);
     }
     if ( new_state == state::turning_right)
     {
 	steering_angle = drive_cmd.angle;
-	drive_traj.init_turning_right(steering_angle);
+	drive_traj.init_turning(steering_angle);
     }
     if ( new_state == state::accelerating)
     {
@@ -287,12 +287,12 @@ void drc_drive_thread::control_law()
     }
     if ( current_state == state::turning_left )
     {
-	if(!drive_traj.perform_turning_left()){ std::cout<<"ERROR TURNING LEFT"<<std::endl; success=false;}
+	if(!drive_traj.perform_turning()){ std::cout<<"ERROR TURNING LEFT"<<std::endl; success=false;}
 	else success=true;
     }
     if ( current_state == state::turning_right )
     {
-	if(!drive_traj.perform_turning_right()){ std::cout<<"ERROR TURNING RIGHT"<<std::endl; success=false;}
+	if(!drive_traj.perform_turning()){ std::cout<<"ERROR TURNING RIGHT"<<std::endl; success=false;}
 	else success=true;
     }
     if ( current_state == state::accelerating )

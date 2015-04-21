@@ -60,13 +60,9 @@ namespace walkman
                 ready,
 		data_received,
 		aligning_hand,
-		aligned_hand,
 		turning_left,
-		turned_left,
 		turning_right,
-		turned_right,
 		accelerating,
-		accelerated,
 		grasping,
 		ungrasping
 	    };

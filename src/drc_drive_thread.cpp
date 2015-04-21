@@ -56,13 +56,9 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     state_map[state::ready] = "ready";
     state_map[state::data_received] = "data_received";
     state_map[state::aligning_hand] = "aligning_hand";
-    state_map[state::aligned_hand] = "aligned_hand";
     state_map[state::turning_left] = "turning_left";
-    state_map[state::turned_left] = "turned_left";
     state_map[state::turning_right] = "turning_right";
-    state_map[state::turned_right] = "turned_right";
     state_map[state::accelerating] = "accelerating";
-    state_map[state::accelerated] = "accelerated";
     
     stateMachine.insert(transition_table);
     

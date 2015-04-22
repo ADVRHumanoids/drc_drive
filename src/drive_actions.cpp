@@ -18,7 +18,7 @@
 #define STEERING_WHEEL_RADIUS 0.18
 #define HAND_STEERINGWHEEL_OFFSET_X 0.125
 #define HAND_STEERINGWHEEL_OFFSET_Y 0.04
-#define HAND_STEERINGWHEEL_OFFSET_Z 0.05
+#define HAND_STEERINGWHEEL_OFFSET_Z 0.025
 
 walkman::drc::drive::drive_actions::drive_actions()
 {
@@ -178,7 +178,7 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
 
 bool walkman::drc::drive::drive_actions::init_turning(double angle)
 {   
-    double time_f = 5.0;
+    double time_f = 5.0*abs(angle/360);	// time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
     world_SteeringWheel.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);

@@ -1128,7 +1128,7 @@
             <izz>0.01</izz>
           </inertia>
         </inertial>
-        <!-- <collision name='gas_pedal_collision'>
+        <collision name='gas_pedal_collision'>
           <pose>-0.0385 0 -0.086 3.14159 1.12559 3.14159</pose>
           <geometry>
             <box>
@@ -1145,7 +1145,7 @@
               <ode/>
             </friction>
           </surface>
-        </collision> -->
+        </collision>
         <visual name='visual'>
           <pose>0 0 0 0 0 -1.5707</pose>
           <geometry>

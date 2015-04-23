@@ -44,6 +44,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready            ),
+	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND           ,    state::aligning_hand    ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+

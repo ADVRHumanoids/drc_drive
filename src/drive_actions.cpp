@@ -17,7 +17,7 @@
 
 #define STEERING_WHEEL_RADIUS 0.18
 #define HAND_STEERINGWHEEL_OFFSET_X 0.125
-#define HAND_STEERINGWHEEL_OFFSET_Y 0.04
+#define HAND_STEERINGWHEEL_OFFSET_Y 0.025
 #define HAND_STEERINGWHEEL_OFFSET_Z 0.025
 
 walkman::drc::drive::drive_actions::drive_actions()
@@ -29,7 +29,7 @@ walkman::drc::drive::drive_actions::drive_actions()
     steering_wheel_data[ROLL_INDEX] = 0.0;
     steering_wheel_data[PITCH_INDEX] = 0.0;
     steering_wheel_data[YAW_INDEX] = 0.0;
-    steering_wheel_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS; //prova
+    steering_wheel_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS;
     
     left_arm_controlled = true;
     right_arm_controlled = false;
@@ -153,7 +153,7 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
   
   tempLhand_finalLhand.p.data[X_INDEX] = HAND_STEERINGWHEEL_OFFSET_X;
   tempLhand_finalLhand.p.data[Y_INDEX] = HAND_STEERINGWHEEL_OFFSET_Y;
-  tempLhand_finalLhand.p.data[Z_INDEX] = -steering_wheel_data[RADIUS_INDEX] + HAND_STEERINGWHEEL_OFFSET_Z;
+  tempLhand_finalLhand.p.data[Z_INDEX] = 1*(-steering_wheel_data[RADIUS_INDEX] + HAND_STEERINGWHEEL_OFFSET_Z);
   tempLhand_finalLhand.M = KDL::Rotation::Identity();
   
   world_FinalLhand = world_tempLhand*tempLhand_finalLhand;
@@ -178,11 +178,12 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
 
 bool walkman::drc::drive::drive_actions::init_turning(double angle)
 {   
-    double time_f = 5.0*abs(angle/360);	// time is parametrized wrt the commanded angle
+    double time_f = 8.0*abs(angle/360);	// time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
     world_SteeringWheel.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);
-    world_SteeringWheel.M = KDL::Rotation::Identity();
+    world_SteeringWheel.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
+    world_SteeringWheel.M = world_SteeringWheel.M*KDL::Rotation::RotY(90*DEG2RAD);
     
     left_arm_generator.circle_initialize(time_f, steering_wheel_data[RADIUS_INDEX], angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
     initialized_time=yarp::os::Time::now();

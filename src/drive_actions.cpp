@@ -29,7 +29,7 @@ walkman::drc::drive::drive_actions::drive_actions()
     steering_wheel_data[ROLL_INDEX] = 0.0;
     steering_wheel_data[PITCH_INDEX] = 0.0;
     steering_wheel_data[YAW_INDEX] = 0.0;
-    steering_wheel_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS;
+    steering_wheel_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS; //prova
     
     left_arm_controlled = true;
     right_arm_controlled = false;

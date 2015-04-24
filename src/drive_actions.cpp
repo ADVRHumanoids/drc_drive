@@ -30,31 +30,26 @@ walkman::drc::drive::drive_actions::drive_actions()
     steering_wheel_data[PITCH_INDEX] = 0.0;
     steering_wheel_data[YAW_INDEX] = 0.0;
     steering_wheel_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS;
-    
-    left_arm_controlled = true;
-    right_arm_controlled = false;
 }
 
-void walkman::drc::drive::drive_actions::set_controlled_arms(bool left_arm, bool right_arm)
+void walkman::drc::drive::drive_actions::set_controlled_end_effector(bool left_arm, bool left_foot)
 {
     left_arm_controlled = left_arm;
-    right_arm_controlled = right_arm;
+    left_foot_controlled = left_foot;
 }
 
-void walkman::drc::drive::drive_actions::init(OpenSoT::tasks::velocity::Cartesian::Ptr l_arm_task, 
-					      OpenSoT::tasks::velocity::Cartesian::Ptr r_arm_task,
+void walkman::drc::drive::drive_actions::init(OpenSoT::tasks::velocity::Cartesian::Ptr l_arm_task,
 					      OpenSoT::tasks::velocity::Cartesian::Ptr l_foot_task
 					     )
 {
     left_arm_task = l_arm_task;
-    right_arm_task = r_arm_task;
     left_foot_task = l_foot_task;
 }
 
-void walkman::drc::drive::drive_actions::get_controlled_arms(bool& using_left, bool& using_right)
+void walkman::drc::drive::drive_actions::get_controlled_end_effector(bool& using_arm, bool& using_foot)
 {
-    using_left = left_arm_controlled;
-    using_right = right_arm_controlled;
+    using_arm = left_arm_controlled;
+    using_foot = left_foot_controlled;
 }
 
 void walkman::drc::drive::drive_actions::compute_cartesian_error(KDL::Frame Start, KDL::Frame Target, KDL::Vector& position_error, KDL::Vector& orientation_error)
@@ -75,24 +70,18 @@ void walkman::drc::drive::drive_actions::compute_cartesian_error(KDL::Frame Star
 }
 
 void walkman::drc::drive::drive_actions::get_left_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error)
-{
+{    
     KDL::Frame world_CurrentLarm;
     YarptoKDL(left_arm_task->getActualPose(),world_CurrentLarm);
     compute_cartesian_error(world_CurrentLarm,world_FinalLhand,position_error,orientation_error);
 }
 
-void walkman::drc::drive::drive_actions::get_right_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error)
-{
-    KDL::Frame world_CurrentRarm;
-    YarptoKDL(right_arm_task->getActualPose(),world_CurrentRarm);
-    compute_cartesian_error(world_CurrentRarm,world_FinalRhand,position_error,orientation_error);
-}
-
 void walkman::drc::drive::drive_actions::get_left_foot_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error)
-{
+{    
     KDL::Frame world_CurrentLfoot;
     YarptoKDL(left_foot_task->getActualPose(),world_CurrentLfoot);
-    compute_cartesian_error(world_CurrentLfoot,world_FinalLfoot,position_error,orientation_error);
+    // using world_InitialLfoot as target because we want the foot to return to the starting position after pusing gas pedal
+    compute_cartesian_error(world_CurrentLfoot,world_InitialLfoot,position_error,orientation_error);
 }
 
 bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Frame, KDL::Frame steering_wheel_data_, double radius, iDynUtils& model_)
@@ -141,7 +130,7 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
 
 bool walkman::drc::drive::drive_actions::init_aligning_hand()
 {
-  double time_f = 5.0;
+  hand_traj_time = 5.0;
   YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
   
   KDL::Frame world_tempLhand;
@@ -158,7 +147,7 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
   
   world_FinalLhand = world_tempLhand*tempLhand_finalLhand;
   
-  left_arm_generator.line_initialize(time_f,world_InitialLhand,world_FinalLhand);
+  left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
   initialized_time=yarp::os::Time::now();
   
   return true;
@@ -178,14 +167,19 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
 
 bool walkman::drc::drive::drive_actions::init_turning(double angle)
 {   
-    double time_f = 8.0*abs(angle/360);	// time is parametrized wrt the commanded angle
+    hand_traj_time = 8.0*abs(angle/360);	// time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
     world_SteeringWheel.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);
     world_SteeringWheel.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
     world_SteeringWheel.M = world_SteeringWheel.M*KDL::Rotation::RotY(90*DEG2RAD);
     
-    left_arm_generator.circle_initialize(time_f, steering_wheel_data[RADIUS_INDEX], angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
+    left_arm_generator.circle_initialize(hand_traj_time, steering_wheel_data[RADIUS_INDEX], angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
+    
+    // getting the hand target
+    KDL::Twist dummy;
+    left_arm_generator.circle_trajectory(hand_traj_time,world_FinalLhand,dummy);
+    
     initialized_time=yarp::os::Time::now();
     
     return true;
@@ -207,19 +201,17 @@ bool walkman::drc::drive::drive_actions::perform_turning()
 
 bool walkman::drc::drive::drive_actions::init_accelerating()
 {        
+    foot_push_time = 2.0;
+    foot_release_time = 1.0;
+    
     double left_foot_pitch = 15*DEG2RAD;
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
-    
-    //std::cout<<"X: "<<world_InitialLfoot.p(0)<<" Y: "<<world_InitialLfoot.p(1)<<" Z: "<<world_InitialLfoot.p(2)<<std::endl;
     
     world_FinalLfoot.p = world_InitialLfoot.p;
     world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(left_foot_pitch);
     
-    push_time = 2.0;
-    release_time = 1.0;
-    
-    left_foot_generator_push.line_initialize(push_time,world_InitialLfoot,world_FinalLfoot);
-    left_foot_generator_release.line_initialize(release_time,world_FinalLfoot,world_InitialLfoot);
+    left_foot_generator_push.line_initialize(foot_push_time,world_InitialLfoot,world_FinalLfoot);
+    left_foot_generator_release.line_initialize(foot_release_time,world_FinalLfoot,world_InitialLfoot);
     initialized_time=yarp::os::Time::now();
     
     return true;
@@ -231,10 +223,10 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     KDL::Frame Xd_LF;
     KDL::Twist dXd_LF;
    
-    if (time <= push_time)
+    if (time <= foot_push_time)
       left_foot_generator_push.line_trajectory(time, Xd_LF, dXd_LF);
     else
-      left_foot_generator_release.line_trajectory(time-push_time, Xd_LF, dXd_LF);
+      left_foot_generator_release.line_trajectory(time-foot_push_time, Xd_LF, dXd_LF);
     
     
     Xd_LF.p = world_InitialLfoot.p;

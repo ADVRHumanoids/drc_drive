@@ -99,10 +99,8 @@ namespace walkman
                 OpenSoT::solvers::QPOases_sot::Stack stack;
 		
                 OpenSoT::tasks::velocity::Cartesian::Ptr left_arm_task;
-                OpenSoT::tasks::velocity::Cartesian::Ptr right_arm_task;
 		OpenSoT::tasks::velocity::Cartesian::Ptr left_foot_task;
 		
-		OpenSoT::interfaces::yarp::tasks::YCartesian::Ptr Yright_arm_task;
 		OpenSoT::interfaces::yarp::tasks::YCartesian::Ptr Yleft_arm_task;
 		OpenSoT::interfaces::yarp::tasks::YCartesian::Ptr Yleft_foot_task;
 
@@ -153,6 +151,8 @@ namespace walkman
 		  * @brief move function
 		  */
 		void move();
+		
+		bool action_completed();
 		
 		bool move_hands(double close);
 		

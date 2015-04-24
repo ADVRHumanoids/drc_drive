@@ -178,7 +178,7 @@ bool drc_drive_thread::custom_init()
 		robot.right_hand.setReferenceSpeed(0.3);
     }
     
-    drive_traj.init(left_arm_task,right_arm_task,left_foot_task);
+    drive_traj.init(left_arm_task,left_foot_task);
     
     return true;
 }
@@ -224,27 +224,19 @@ void drc_drive_thread::run()
     
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Aligning hand with X normal wrt steering wheel ..." << std::endl;
+	drive_traj.set_controlled_end_effector(true,false);
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Accelerating ..." << std::endl;
+	drive_traj.set_controlled_end_effector(false,true);
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Turning LEFT ..." << std::endl;
+	drive_traj.set_controlled_end_effector(true,false);
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Turning RIGHT ..." << std::endl;
-    }
-    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_RIGHT_HAND ) {
-        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Controlling now RIGHT hand ..." << std::endl;
-	drive_traj.set_controlled_arms(false,true);
-    }
-    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_LEFT_HAND ) {
-        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Controlling now LEFT hand ..." << std::endl;
-	drive_traj.set_controlled_arms(true,false);
-    }
-    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_BOTH_HANDS ) {
-        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Controlling now BOTH hands ..." << std::endl;
-	drive_traj.set_controlled_arms(true,true);
+	drive_traj.set_controlled_end_effector(true,false);
     }
     if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA ) 
     {
@@ -257,6 +249,11 @@ void drc_drive_thread::run()
     control_law();
 
     move();
+    
+    if (action_completed())
+    {
+      current_state=stateMachine.evolve_state_machine(current_state,WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE);
+    } 
     
     status_interface.setStatus(state_map[current_state] , status_seq_num++);
 }    
@@ -299,7 +296,6 @@ void drc_drive_thread::control_law()
 	else success=true;
     }
     
-    
     if(solver->solve(output.q_dot))
 	output.q = input.q + output.q_dot;
     else {
@@ -314,21 +310,38 @@ void drc_drive_thread::move()
     robot.move(output.q);
 }
 
-bool drc_drive_thread::move_hands(double close)
-{	
-  if (close <= 1.0 && close >= 0.0)
-      if(robot.hasHands())
+bool drc_drive_thread::action_completed()
+{
+    KDL::Vector LHand_position_error, LHand_orientation_error;
+    KDL::Vector LFoot_position_error, LFoot_orientation_error;
+    bool LHand_done = false;
+    bool LFoot_done = false;
+    bool using_arm, using_foot;
+    bool traj_just_started = (yarp::os::Time::now()-drive_traj.initialized_time) < 1.5;
+    
+    drive_traj.get_controlled_end_effector(using_arm,using_foot);
+   
+    // also: checking the cartesian error according to the current task
+    if (using_arm)
+    {
+      drive_traj.get_left_arm_cartesian_error(LHand_position_error, LHand_orientation_error);
+      if( LHand_position_error.Norm()<0.01 && LHand_orientation_error.Norm()<0.1) 
       {
-            if (drive_traj.left_arm_controlled) q_left_desired   = 0.3+ close*(1.3-0.3); // NOTE these values work for simulation and real hands
-            if (drive_traj.right_arm_controlled) q_right_desired = 0.3+ close*(1.3-0.3);
-            robot.moveHands(q_left_desired,q_right_desired);
-            return true;
+	if (!traj_just_started)
+	  LHand_done = true;
       }
-  else
-  {
-    std::cout<<"closing amount is out of feasible bounds"<<std::endl;
-  }
-   return false;
+    }
+    if (using_foot)
+    {
+      drive_traj.get_left_foot_cartesian_error(LFoot_position_error, LFoot_orientation_error);
+      if( LFoot_position_error.Norm()<0.01 && LFoot_orientation_error.Norm()<0.1)
+      {
+	if (!traj_just_started)
+	  LFoot_done = true;
+      }
+    }
+    
+    return (using_arm?LHand_done:1) && (using_foot?LFoot_done:1);
 }
 
 bool drc_drive_thread::sense_hands(Vector& q_left_hand, Vector& q_right_hand)

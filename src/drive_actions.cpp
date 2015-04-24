@@ -130,6 +130,7 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
 
 bool walkman::drc::drive::drive_actions::init_aligning_hand()
 {
+  end_of_traj = false;
   hand_traj_time = 5.0;
   YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
   
@@ -162,11 +163,16 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
     left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
     
+    if (!end_of_traj)
+      if (time >= hand_traj_time)
+	end_of_traj = true;
+    
     return true;
 }
 
 bool walkman::drc::drive::drive_actions::init_turning(double angle)
 {   
+    end_of_traj = false;
     hand_traj_time = 8.0*abs(angle/360);	// time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
@@ -196,11 +202,16 @@ bool walkman::drc::drive::drive_actions::perform_turning()
     Xd_LH.M = world_InitialLhand.M;   
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
     
+    if (!end_of_traj)
+      if (time >= hand_traj_time)
+	end_of_traj = true;
+    
     return true;
 }
 
 bool walkman::drc::drive::drive_actions::init_accelerating()
 {        
+    end_of_traj = false;
     foot_push_time = 2.0;
     foot_release_time = 1.0;
     
@@ -231,6 +242,10 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     
     Xd_LF.p = world_InitialLfoot.p;
     left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
+    
+    if (!end_of_traj)
+      if (time >= (foot_push_time + foot_release_time))
+	end_of_traj = true;
    
     return true;
 }

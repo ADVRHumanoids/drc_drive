@@ -317,7 +317,6 @@ bool drc_drive_thread::action_completed()
     bool LHand_done = false;
     bool LFoot_done = false;
     bool using_arm, using_foot;
-    bool traj_just_started = (yarp::os::Time::now()-drive_traj.initialized_time) < 1.5;
     
     drive_traj.get_controlled_end_effector(using_arm,using_foot);
    
@@ -325,18 +324,16 @@ bool drc_drive_thread::action_completed()
     if (using_arm)
     {
       drive_traj.get_left_arm_cartesian_error(LHand_position_error, LHand_orientation_error);
-      if( LHand_position_error.Norm()<0.01 && LHand_orientation_error.Norm()<0.1) 
+      if( drive_traj.end_of_traj && LHand_position_error.Norm()<0.01 && LHand_orientation_error.Norm()<0.1) 
       {
-	if (!traj_just_started)
 	  LHand_done = true;
       }
     }
     if (using_foot)
     {
       drive_traj.get_left_foot_cartesian_error(LFoot_position_error, LFoot_orientation_error);
-      if( LFoot_position_error.Norm()<0.01 && LFoot_orientation_error.Norm()<0.1)
+      if( drive_traj.end_of_traj && LFoot_position_error.Norm()<0.01 && LFoot_orientation_error.Norm()<0.1)
       {
-	if (!traj_just_started)
 	  LFoot_done = true;
       }
     }

@@ -30,6 +30,9 @@ walkman::drc::drive::drive_actions::drive_actions()
     steering_wheel_data[PITCH_INDEX] = 0.0;
     steering_wheel_data[YAW_INDEX] = 0.0;
     steering_wheel_data[RADIUS_INDEX] = STEERING_WHEEL_RADIUS;
+    
+    left_arm_controlled = false;
+    left_foot_controlled = false;
 }
 
 void walkman::drc::drive::drive_actions::set_controlled_end_effector(bool left_arm, bool left_foot)
@@ -143,7 +146,7 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
   
   tempLhand_finalLhand.p.data[X_INDEX] = HAND_STEERINGWHEEL_OFFSET_X;
   tempLhand_finalLhand.p.data[Y_INDEX] = HAND_STEERINGWHEEL_OFFSET_Y;
-  tempLhand_finalLhand.p.data[Z_INDEX] = 1*(-steering_wheel_data[RADIUS_INDEX] + HAND_STEERINGWHEEL_OFFSET_Z);
+  tempLhand_finalLhand.p.data[Z_INDEX] = -steering_wheel_data[RADIUS_INDEX] + HAND_STEERINGWHEEL_OFFSET_Z;
   tempLhand_finalLhand.M = KDL::Rotation::Identity();
   
   world_FinalLhand = world_tempLhand*tempLhand_finalLhand;
@@ -164,8 +167,10 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
     
     if (!end_of_traj)
+    {
       if (time >= hand_traj_time)
 	end_of_traj = true;
+    }
     
     return true;
 }
@@ -185,6 +190,7 @@ bool walkman::drc::drive::drive_actions::init_turning(double angle)
     // getting the hand target
     KDL::Twist dummy;
     left_arm_generator.circle_trajectory(hand_traj_time,world_FinalLhand,dummy);
+    world_FinalLhand.M = world_InitialLhand.M;
     
     initialized_time=yarp::os::Time::now();
     
@@ -203,8 +209,10 @@ bool walkman::drc::drive::drive_actions::perform_turning()
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
     
     if (!end_of_traj)
+    {
       if (time >= hand_traj_time)
 	end_of_traj = true;
+    }
     
     return true;
 }
@@ -244,8 +252,10 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
     
     if (!end_of_traj)
+    {
       if (time >= (foot_push_time + foot_release_time))
 	end_of_traj = true;
+    }
    
     return true;
 }

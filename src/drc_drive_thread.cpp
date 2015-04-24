@@ -320,19 +320,20 @@ bool drc_drive_thread::action_completed()
     
     drive_traj.get_controlled_end_effector(using_arm,using_foot);
    
-    // also: checking the cartesian error according to the current task
-    if (using_arm)
+    // checking the cartesian error according to the current active task and the status of trajectory
+    if (using_arm && drive_traj.end_of_traj)
     {
       drive_traj.get_left_arm_cartesian_error(LHand_position_error, LHand_orientation_error);
-      if( drive_traj.end_of_traj && LHand_position_error.Norm()<0.01 && LHand_orientation_error.Norm()<0.1) 
+      std::cout<<"P: "<<LHand_position_error.Norm()<<" O :"<<LHand_orientation_error.Norm()<<std::endl;
+      if( LHand_position_error.Norm()<0.01 && LHand_orientation_error.Norm()<0.1) 
       {
 	  LHand_done = true;
       }
     }
-    if (using_foot)
+    if (using_foot && drive_traj.end_of_traj)
     {
       drive_traj.get_left_foot_cartesian_error(LFoot_position_error, LFoot_orientation_error);
-      if( drive_traj.end_of_traj && LFoot_position_error.Norm()<0.01 && LFoot_orientation_error.Norm()<0.1)
+      if( LFoot_position_error.Norm()<0.01 && LFoot_orientation_error.Norm()<0.1)
       {
 	  LFoot_done = true;
       }

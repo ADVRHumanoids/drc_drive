@@ -104,18 +104,7 @@ bool drc_drive_thread::custom_init()
     left_foot_task->setOrientationErrorGain(0.1);
     Yleft_foot_task = YCartesian::Ptr( new YCartesian(model.getRobotName(), get_module_prefix(), left_foot_task));
     
-    //TODO see if it's really needed 
-//     std::vector<bool> left_foot_active_joints = left_foot_task->getActiveJointsMask();
-//     for(unsigned int i = 0; i < left_foot_active_joints.size(); ++i)
-//     {
-//       std::vector<unsigned int>::iterator it = std::find(model.left_leg.joint_numbers.begin(), model.left_leg.joint_numbers.end(), i);
-//       // for the acceleration task, only the pitch joint of the foot is needed
-//       if(it == model.left_leg.joint_numbers.end() - 1)
-// 	  left_foot_active_joints[i] = true;
-//       else
-// 	  left_foot_active_joints[i] = false;
-//     }
-//     left_foot_task->setActiveJointsMask(left_foot_active_joints);
+    //TODO check if it's needed to disable any joint to perform the acceleration task without disturbing the robot position in the car 
 
     left_arm_task = Cartesian::Ptr( new Cartesian("6d::l_arm::world", input.q, model,"LSoftHand","world"));
     left_arm_task->setOrientationErrorGain(0.1);
@@ -130,8 +119,6 @@ bool drc_drive_thread::custom_init()
       else
 	  left_arm_active_joints[i] = false;
     }
-    //for(unsigned int i = 0; i < 3; ++i)
-        //left_arm_active_joints[model.torso.joint_numbers[i]] = true;
     left_arm_task->setActiveJointsMask(left_arm_active_joints);
 
     first_cartesian_tasks_list.push_back(left_foot_task);
@@ -324,7 +311,6 @@ bool drc_drive_thread::action_completed()
     if (using_arm && drive_traj.end_of_traj)
     {
       drive_traj.get_left_arm_cartesian_error(LHand_position_error, LHand_orientation_error);
-      std::cout<<"P: "<<LHand_position_error.Norm()<<" O :"<<LHand_orientation_error.Norm()<<std::endl;
       if( LHand_position_error.Norm()<0.01 && LHand_orientation_error.Norm()<0.1) 
       {
 	  LHand_done = true;

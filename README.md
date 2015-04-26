@@ -2,7 +2,8 @@ drc_drive
 ===============
 
 COMMANDS:
-- (ready) 0
+- (steeringwheeldatasent ref_frame x y z qx qy qz qw radius) 0
+- (align_hand) 0
 - (turn_left DEG_ANGLE) 0
 - (turn_right DEG_ANGLE) 0
 - (accelerate) 0
@@ -10,6 +11,3 @@ COMMANDS:
 
 NOTE:
 - 'DEG_ANGLE' is a positive double
-
-TODO:
-- Decide whether implement a single 'turn' action with angle sign discriminating the direction.

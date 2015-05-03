@@ -294,8 +294,11 @@ void drc_drive_thread::control_law()
 
 void drc_drive_thread::move()
 {   
-    robot.left_leg.move(output.q);
-    robot.left_arm.move(output.q);
+    yarp::sig::Vector q_torso(3), q_left_arm(7), q_right_arm(7), q_left_leg(6), q_right_leg(6), q_head(2);
+    robot.fromIdynToRobot(output.q, q_right_arm, q_left_arm, q_torso, q_right_leg, q_left_leg, q_head);
+    
+    robot.left_leg.move(q_left_leg);
+    robot.left_arm.move(q_left_arm);
 }
 
 bool drc_drive_thread::action_completed()

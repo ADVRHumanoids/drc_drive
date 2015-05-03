@@ -154,7 +154,8 @@ bool drc_drive_thread::custom_init()
     solver = OpenSoT::solvers::QPOases_sot_Ptr( new OpenSoT::solvers::QPOases_sot(stack, bounds) );
     
     // set the robot controlled in position
-    robot.setPositionDirectMode();
+    robot.left_arm.setPositionDirectMode();
+    robot.left_leg.setPositionDirectMode();
     // hands in position with a ref speed
     if(robot.left_hand.isAvailable) { 
 		robot.left_hand.setPositionMode();
@@ -292,9 +293,9 @@ void drc_drive_thread::control_law()
 }
 
 void drc_drive_thread::move()
-{  
-    // NOTE to control the whole robot
-    robot.move(output.q);
+{   
+    robot.left_leg.move(output.q);
+    robot.left_arm.move(output.q);
 }
 
 bool drc_drive_thread::action_completed()

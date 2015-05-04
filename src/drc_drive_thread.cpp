@@ -88,7 +88,19 @@ bool drc_drive_thread::custom_init()
 
     // sense
     robot.sense(input.q, input.q_dot, input.tau);
-    
+    auto max = model.iDyn3_model.getJointBoundMax();
+    auto min = model.iDyn3_model.getJointBoundMin();
+    for (int i=0;i<input.q.size();i++)
+    {
+        if (input.q[i]>max[i])
+        {
+            std::cout<<"error: "<<model.getJointNames().at(i)<<"("<<input.q[i]<<") is outside maximum bound: "<<max[i]<<std::endl;
+        }
+        if (input.q[i]<min[i])
+        {
+            std::cout<<"error: "<<model.getJointNames().at(i)<<"("<<input.q[i]<<") is outside minimum bound: "<<min[i]<<std::endl;
+        }
+    }
     // initializing output.q to current position
     output.q = input.q;
 

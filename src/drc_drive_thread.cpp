@@ -82,7 +82,10 @@ bool drc_drive_thread::custom_init()
     // start the status chain_interface
     status_interface.start();
     // notify the ready status
-    status_interface.setStatus( "ready" );	
+    if(status_definitions.status_to_code.count("ready"))
+	status_interface.setStatus(status_definitions.status_to_code.at("ready") , status_seq_num++);
+    else
+	status_interface.setStatus( "ready" );	
 
     // sense
     robot.sense(input.q, input.q_dot, input.tau);
@@ -253,7 +256,10 @@ void drc_drive_thread::run()
       current_state=stateMachine.evolve_state_machine(current_state,WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE);
     } 
     
-    status_interface.setStatus(state_map[current_state] , status_seq_num++);
+    if(status_definitions.status_to_code.count(state_map.at(current_state)))
+	status_interface.setStatus(status_definitions.status_to_code.at(state_map.at(current_state)) , status_seq_num++);
+    else
+	status_interface.setStatus(state_map[current_state] , status_seq_num++);
 }    
 
 void drc_drive_thread::sense()

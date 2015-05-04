@@ -28,6 +28,7 @@
 #include <OpenSoT/OpenSoT.h>
 #include <yarp/math/Math.h>
 
+#include "drc_shared/module_statuses/drc_drive_statuses.h"
 
 // SoT task and constraints declaration
 
@@ -68,6 +69,7 @@ namespace walkman
 		walkman::yarp_custom_command_interface<drive_msg> command_interface;
 		int seq_num;
 		
+		walkman::drc::drive::status_definitions status_definitions;
 		walkman::yarp_status_interface status_interface;
 		int status_seq_num;
 		

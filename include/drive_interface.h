@@ -23,8 +23,8 @@
 #define WALKMAN_DRC_DRIVE_COMMAND_LEFT_HAND "left_hand"
 #define WALKMAN_DRC_DRIVE_COMMAND_RIGHT_HAND "right_hand"
 #define WALKMAN_DRC_DRIVE_COMMAND_BOTH_HANDS "both_hands"
-#define WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS "hands_close"
-#define WALKMAN_DRC_DRIVE_COMMAND_OPENING_HANDS "hands_open"
+#define WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS "close_hands"
+#define WALKMAN_DRC_DRIVE_COMMAND_OPENING_HANDS "open_hands"
 
 #define WALKMAN_DRC_DRIVE_STATUS_TURN_LEFT "turning_left"
 #define WALKMAN_DRC_DRIVE_STATUS_TURN_RIGHT "turning_right"
@@ -34,6 +34,9 @@
 
 #define RAD2DEG    (180.0/M_PI)
 #define DEG2RAD    (M_PI/180.0)
+
+#define MIN_CLOSURE 60.0 * DEG2RAD
+#define MAX_CLOSURE 700.0 * DEG2RAD
 
 namespace walkman
 {

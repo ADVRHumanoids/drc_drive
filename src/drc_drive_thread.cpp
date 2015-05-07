@@ -244,6 +244,14 @@ void drc_drive_thread::run()
 	std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Steering wheel data received ..." << std::endl;
 	drive_traj.get_steering_wheel_data(drive_cmd.frame, drive_cmd.drive_data, drive_cmd.radius, model);
     }
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_OPENING_HANDS) {
+        if(!move_hands(0)) std::cout<<"Hands not available "<<std::endl;
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", opening the hands." << std::endl;
+    }
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS) {
+        if(!move_hands(1)) std::cout<<"Hands not available "<<std::endl;
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", closing the hands." << std::endl;
+    }
     
     sense();
 
@@ -350,12 +358,8 @@ bool drc_drive_thread::action_completed()
 
 bool drc_drive_thread::sense_hands(Vector& q_left_hand, Vector& q_right_hand)
 {
-      if(robot.hasHands())
-      {
-	  robot.senseHandsPosition(q_left_hand,q_right_hand);
-	  return true;
-      }
-      return false;
+      robot.senseHandsPosition(q_left_hand,q_right_hand);
+      return true;
 }
 
 void drc_drive_thread::custom_release()
@@ -363,18 +367,24 @@ void drc_drive_thread::custom_release()
 generic_thread::custom_release();
 }
 
-
+bool drc_drive_thread::move_hands(double close)
+{	
+      if(close <= 1.0 && close >= 0.0)
+      {
+            q_left_desired   = MIN_CLOSURE + close*(MAX_CLOSURE - MIN_CLOSURE); 
+	    q_right_desired = MIN_CLOSURE;
+            robot.moveHands(q_left_desired,q_right_desired);
+            return true;
+      }
+      return false;
+}
 
 bool drc_drive_thread::hands_in_position()
 {
-    if(robot.hasHands())
-    {
-	yarp::sig::Vector q_left(1);
-	yarp::sig::Vector q_right(1);
-	sense_hands(q_left, q_right);
+    yarp::sig::Vector q_left(1);
+    yarp::sig::Vector q_right(1);
+    sense_hands(q_left, q_right);
 
-	if ( fabs(q_left[0]-q_left_desired[0]) < 0.1 &&  fabs(q_right[0]-q_right_desired[0]) < 0.1 ) return true;	  
-	    return false;
-    }
-    else return true;
+    if ( fabs(q_left[0]-q_left_desired[0]) < 0.1 &&  fabs(q_right[0]-q_right_desired[0]) < 0.1 ) return true;	  
+	return false;
 }

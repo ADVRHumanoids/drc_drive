@@ -54,7 +54,6 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     
     state_map[state::idle] = "idle";
     state_map[state::ready] = "ready";
-    state_map[state::data_received] = "data_received";
     state_map[state::aligning_hand] = "aligning_hand";
     state_map[state::turning_left] = "turning_left";
     state_map[state::turning_right] = "turning_right";

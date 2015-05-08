@@ -35,7 +35,7 @@
 #define RAD2DEG    (180.0/M_PI)
 #define DEG2RAD    (M_PI/180.0)
 
-#define MIN_CLOSURE 60.0 * DEG2RAD
+#define MIN_CLOSURE 0.0 * DEG2RAD
 #define MAX_CLOSURE 700.0 * DEG2RAD
 
 namespace walkman

@@ -231,6 +231,7 @@ void drc_drive_thread::run()
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Aligning hand with X normal wrt steering wheel ..." << std::endl;
 	drive_traj.set_controlled_end_effector(true,false);
+        if(!move_hands(0)) std::cout<<"Hands not available "<<std::endl;
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Accelerating ..." << std::endl;

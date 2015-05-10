@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     rf.setVerbose(true);
     // set drc_drive_initial_config.ini as default
     // to specify another config file, run with this arg: --from your_config_file.ini 
-    rf.setDefaultConfigFile( "drc_drive_initial_config.ini" ); 
+    rf.setDefaultConfigFile( "bigman_drc_drive.ini" ); 
     rf.setDefaultContext( "drc_drive" );  
     rf.configure(argc, argv);
     // create my module

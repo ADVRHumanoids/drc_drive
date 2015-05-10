@@ -134,30 +134,38 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     return true;
 }
 
+void walkman::drc::drive::drive_actions::get_rotation_radius()
+{
+    KDL::Frame world_CurrentLarm;
+    
+    YarptoKDL(left_arm_task->getActualPose(), world_CurrentLarm);
+    rotation_radius = fabs(world_CurrentLarm.p.Norm() - world_SteeringWheel.p.Norm());
+}
+
 bool walkman::drc::drive::drive_actions::init_aligning_hand()
 {
-  end_of_traj = false;
-  hand_traj_time = 5.0;
-  YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
-  
-  KDL::Frame world_tempLhand;
-  KDL::Frame tempLhand_finalLhand;
-  
-  world_tempLhand.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);
-  world_tempLhand.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
-  world_tempLhand.M = world_tempLhand.M*KDL::Rotation::RotY(-90*DEG2RAD);
-  
-  tempLhand_finalLhand.p.data[X_INDEX] = HAND_STEERINGWHEEL_OFFSET_X;
-  tempLhand_finalLhand.p.data[Y_INDEX] = HAND_STEERINGWHEEL_OFFSET_Y;
-  tempLhand_finalLhand.p.data[Z_INDEX] = -steering_wheel_data[RADIUS_INDEX] + HAND_STEERINGWHEEL_OFFSET_Z;
-  tempLhand_finalLhand.M = KDL::Rotation::Identity();
-  
-  world_FinalLhand = world_tempLhand*tempLhand_finalLhand;
-  
-  left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
-  initialized_time=yarp::os::Time::now();
-  
-  return true;
+    end_of_traj = false;
+    hand_traj_time = 5.0;
+    YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
+    
+    KDL::Frame world_tempLhand;
+    KDL::Frame tempLhand_finalLhand;
+    
+    world_tempLhand.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);
+    world_tempLhand.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
+    world_tempLhand.M = world_tempLhand.M*KDL::Rotation::RotY(-90*DEG2RAD);
+    
+    tempLhand_finalLhand.p.data[X_INDEX] = HAND_STEERINGWHEEL_OFFSET_X;
+    tempLhand_finalLhand.p.data[Y_INDEX] = HAND_STEERINGWHEEL_OFFSET_Y;
+    tempLhand_finalLhand.p.data[Z_INDEX] = -steering_wheel_data[RADIUS_INDEX] + HAND_STEERINGWHEEL_OFFSET_Z;
+    tempLhand_finalLhand.M = KDL::Rotation::Identity();
+    
+    world_FinalLhand = world_tempLhand*tempLhand_finalLhand;
+    
+    left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
+    initialized_time=yarp::os::Time::now();
+    
+    return true;
 }
 
 bool walkman::drc::drive::drive_actions::perform_aligning_hand()
@@ -181,14 +189,14 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
 bool walkman::drc::drive::drive_actions::init_turning(double angle)
 {   
     end_of_traj = false;
-    hand_traj_time = 6.0*abs(angle/360);  // time is parametrized wrt the commanded angle
+    hand_traj_time = 10.0*abs(angle/360);  // time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
     world_SteeringWheel.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);
     world_SteeringWheel.M = KDL::Rotation::RPY(steering_wheel_data[ROLL_INDEX],steering_wheel_data[PITCH_INDEX],steering_wheel_data[YAW_INDEX]);
     world_SteeringWheel.M = world_SteeringWheel.M*KDL::Rotation::RotY(90*DEG2RAD);
     
-    left_arm_generator.circle_initialize(hand_traj_time, steering_wheel_data[RADIUS_INDEX], angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
+    left_arm_generator.circle_initialize(hand_traj_time, rotation_radius, angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
     
     // getting the hand target
     KDL::Twist dummy;

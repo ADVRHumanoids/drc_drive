@@ -70,6 +70,8 @@ namespace walkman
                 void get_controlled_end_effector(bool& using_arm, bool& using_foot);
 		void set_controlled_end_effector(bool left_arm, bool left_foot);
 		
+                void get_rotation_radius();
+                
 		bool left_arm_controlled;
 		bool left_foot_controlled;
 		
@@ -81,7 +83,7 @@ namespace walkman
                 double foot_gas_time;
 		
 		double initialized_time;
-// 		
+		double rotation_radius;
 		
 	    };
 	}

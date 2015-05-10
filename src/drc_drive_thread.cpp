@@ -255,6 +255,8 @@ void drc_drive_thread::run()
     }
     if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_OPENING_HANDS) {
         if(!move_hands(0)) std::cout<<"Hands not available "<<std::endl;
+        else
+            drive_traj.get_rotation_radius();
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", opening the hands." << std::endl;
     }
     if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS) {

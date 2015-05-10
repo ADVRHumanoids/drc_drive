@@ -174,12 +174,10 @@ bool drc_drive_thread::custom_init()
     robot.left_leg.setPositionDirectMode();
     // hands in position with a ref speed
     if(robot.left_hand.isAvailable) { 
-		robot.left_hand.setPositionMode();
-		robot.left_hand.setReferenceSpeed(0.3);
+		robot.left_hand.setPositionDirectMode();
     }
     if(robot.right_hand.isAvailable) { 
-		robot.right_hand.setPositionMode();
-		robot.right_hand.setReferenceSpeed(0.3);
+		robot.right_hand.setPositionDirectMode();
     }
     
     drive_traj.init(left_arm_task,left_foot_task);

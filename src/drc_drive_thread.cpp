@@ -41,6 +41,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready            ),
 	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND           ,    state::aligning_hand    ),
+	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::aligning_hand   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
@@ -50,6 +51,8 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::moving_away     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
     };
     
     state_map[state::idle] = "idle";
@@ -58,6 +61,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     state_map[state::turning_left] = "turning_left";
     state_map[state::turning_right] = "turning_right";
     state_map[state::accelerating] = "accelerating";
+    state_map[state::moving_away] = "moving_away";
     
     stateMachine.insert(transition_table);
     
@@ -204,6 +208,10 @@ void drc_drive_thread::init_actions(state new_state)
     {
 	drive_traj.init_accelerating(drive_cmd.push_time);
     }
+    if ( new_state == state::moving_away)
+    {
+	drive_traj.init_moving_away();
+    }
 }
 
 void drc_drive_thread::run()
@@ -234,6 +242,10 @@ void drc_drive_thread::run()
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Turning RIGHT ..." << std::endl;
+	drive_traj.set_controlled_end_effector(true,false);
+    }
+    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY ) {
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Moving away from steering wheel ..." << std::endl;
 	drive_traj.set_controlled_end_effector(true,false);
     }
     if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA ) 
@@ -302,6 +314,11 @@ void drc_drive_thread::control_law()
     if ( current_state == state::accelerating )
     {
 	if(!drive_traj.perform_accelerating()){ std::cout<<"ERROR ACCELERATING"<<std::endl; success=false;}
+	else success=true;
+    }
+    if ( current_state == state::moving_away )
+    {
+	if(!drive_traj.perform_moving_away()){ std::cout<<"ERROR MOVING_AWAY"<<std::endl; success=false;}
 	else success=true;
     }
     

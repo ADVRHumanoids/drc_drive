@@ -260,3 +260,14 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     return true;
 }
 
+bool walkman::drc::drive::drive_actions::init_moving_away()
+{
+    return true;
+}
+
+bool walkman::drc::drive::drive_actions::perform_moving_away()
+{
+    return true;
+}
+
+

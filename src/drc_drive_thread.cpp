@@ -194,17 +194,15 @@ void drc_drive_thread::init_actions(state new_state)
     }
     if ( new_state == state::turning_left)
     {
-	steering_angle = -drive_cmd.angle;
-	drive_traj.init_turning(steering_angle);
+	drive_traj.init_turning(-drive_cmd.angle);
     }
     if ( new_state == state::turning_right)
     {
-	steering_angle = drive_cmd.angle;
-	drive_traj.init_turning(steering_angle);
+	drive_traj.init_turning(drive_cmd.angle);
     }
     if ( new_state == state::accelerating)
     {
-	drive_traj.init_accelerating();
+	drive_traj.init_accelerating(drive_cmd.push_time);
     }
 }
 

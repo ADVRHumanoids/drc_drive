@@ -18,7 +18,7 @@
 #define STEERING_WHEEL_RADIUS 0.18
 #define HAND_STEERINGWHEEL_OFFSET_X 0.125
 #define HAND_STEERINGWHEEL_OFFSET_Y 0.025
-#define HAND_STEERINGWHEEL_OFFSET_Z 0.025
+#define HAND_STEERINGWHEEL_OFFSET_Z 0.005
 
 walkman::drc::drive::drive_actions::drive_actions()
 {
@@ -217,11 +217,11 @@ bool walkman::drc::drive::drive_actions::perform_turning()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::init_accelerating()
+bool walkman::drc::drive::drive_actions::init_accelerating(double push_time)
 {        
     end_of_traj = false;
-    foot_push_time = 2.0;
-    foot_release_time = 1.0;
+    foot_push_time = push_time;
+    foot_release_time = 0.5;
     
     double left_foot_pitch = 15*DEG2RAD;
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);

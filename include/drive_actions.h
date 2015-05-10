@@ -58,7 +58,7 @@ namespace walkman
 		bool init_turning(double angle);
 		bool perform_turning();
 		
-		bool init_accelerating();
+		bool init_accelerating(double push_time);
 		bool perform_accelerating();
 		
 		void get_left_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);

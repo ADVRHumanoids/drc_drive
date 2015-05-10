@@ -206,7 +206,7 @@ void drc_drive_thread::init_actions(state new_state)
     }
     if ( new_state == state::accelerating)
     {
-	drive_traj.init_accelerating(drive_cmd.push_time);
+	drive_traj.init_accelerating(drive_cmd.gas_time);
     }
     if ( new_state == state::moving_away)
     {

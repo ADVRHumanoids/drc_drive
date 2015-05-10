@@ -47,6 +47,9 @@ void walkman::drc::drive::drive_actions::init(OpenSoT::tasks::velocity::Cartesia
 {
     left_arm_task = l_arm_task;
     left_foot_task = l_foot_task;
+    
+    //saving home position for the LHand
+    YarptoKDL(left_arm_task->getActualPose(),world_LhandHome);
 }
 
 void walkman::drc::drive::drive_actions::get_controlled_end_effector(bool& using_arm, bool& using_foot)
@@ -217,11 +220,12 @@ bool walkman::drc::drive::drive_actions::perform_turning()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::init_accelerating(double push_time)
+bool walkman::drc::drive::drive_actions::init_accelerating(double gas_time)
 {        
     end_of_traj = false;
-    foot_push_time = push_time;
+    foot_push_time = 0.5;
     foot_release_time = 0.5;
+    foot_gas_time = gas_time;
     
     double left_foot_pitch = 15*DEG2RAD;
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
@@ -242,10 +246,10 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     KDL::Frame Xd_LF;
     KDL::Twist dXd_LF;
    
-    if (time <= foot_push_time)
+    if (time <= (foot_push_time + foot_gas_time))
       left_foot_generator_push.line_trajectory(time, Xd_LF, dXd_LF);
     else
-      left_foot_generator_release.line_trajectory(time-foot_push_time, Xd_LF, dXd_LF);
+      left_foot_generator_release.line_trajectory(time-(foot_push_time + foot_gas_time), Xd_LF, dXd_LF);
     
     
     Xd_LF.p = world_InitialLfoot.p;
@@ -253,7 +257,7 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     
     if (!end_of_traj)
     {
-      if (time >= (foot_push_time + foot_release_time))
+      if (time >= (foot_push_time + foot_gas_time + foot_release_time))
 	end_of_traj = true;
     }
    
@@ -262,11 +266,32 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
 
 bool walkman::drc::drive::drive_actions::init_moving_away()
 {
+    end_of_traj = false;
+    hand_traj_time = 5.0;
+    YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
+    
+    world_FinalLhand = world_LhandHome;
+    
+    left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
+    initialized_time=yarp::os::Time::now();
     return true;
 }
 
 bool walkman::drc::drive::drive_actions::perform_moving_away()
 {
+    auto time = yarp::os::Time::now()-initialized_time;
+    KDL::Frame Xd_LH;
+    KDL::Twist dXd_LH;
+   
+    left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
+    left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
+    
+    if (!end_of_traj)
+    {
+      if (time >= hand_traj_time)
+        end_of_traj = true;
+    }
+    
     return true;
 }
 

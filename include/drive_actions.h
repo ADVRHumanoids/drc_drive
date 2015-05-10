@@ -58,7 +58,7 @@ namespace walkman
 		bool init_turning(double angle);
 		bool perform_turning();
 		
-		bool init_accelerating(double push_time);
+		bool init_accelerating(double gas_time);
 		bool perform_accelerating();
 		
 		bool init_moving_away();
@@ -78,6 +78,7 @@ namespace walkman
 		double hand_traj_time;
 		double foot_push_time;
 		double foot_release_time;
+                double foot_gas_time;
 		
 		double initialized_time;
 // 		

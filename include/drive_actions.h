@@ -35,6 +35,7 @@ namespace walkman
 		
 		// trajectory generators for all tasks
 		trajectory_generator left_arm_generator;
+		trajectory_generator left_arm_generator_bis;
 		trajectory_generator left_foot_generator_push;
 		trajectory_generator left_foot_generator_release;
 		

@@ -28,6 +28,7 @@ namespace walkman
 		KDL::Frame world_FinalLhand,world_FinalLfoot;
 		KDL::Frame world_LhandHome, world_LfootHome;
 		KDL::Frame world_SteeringWheel;
+		KDL::Frame world_Handle;
 		
 		// local sot tasks
 		OpenSoT::tasks::velocity::Cartesian::Ptr left_arm_task;

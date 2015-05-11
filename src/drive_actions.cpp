@@ -186,10 +186,10 @@ bool walkman::drc::drive::drive_actions::perform_aligning_hand()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::init_turning(double angle)
+bool walkman::drc::drive::drive_actions::init_turning(double angle, double full_circle_time)
 {   
     end_of_traj = false;
-    hand_traj_time = 10.0*abs(angle/360);  // time is parametrized wrt the commanded angle
+    hand_traj_time = full_circle_time*abs(angle/360);  // time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
     world_SteeringWheel.p = KDL::Vector(steering_wheel_data[X_INDEX],steering_wheel_data[Y_INDEX],steering_wheel_data[Z_INDEX]);

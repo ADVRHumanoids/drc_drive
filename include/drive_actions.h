@@ -35,6 +35,7 @@ namespace walkman
 		
 		// trajectory generators for all tasks
 		trajectory_generator left_arm_generator;
+		trajectory_generator left_arm_generator_bis;
 		trajectory_generator left_foot_generator_push;
 		trajectory_generator left_foot_generator_release;
 		
@@ -55,11 +56,14 @@ namespace walkman
 		bool init_aligning_hand();
 		bool perform_aligning_hand();
 		
-		bool init_turning(double angle);
+		bool init_turning(double angle, double full_circle_time);
 		bool perform_turning();
 		
-		bool init_accelerating();
+		bool init_accelerating(double gas_time);
 		bool perform_accelerating();
+		
+		bool init_moving_away();
+		bool perform_moving_away();
 		
 		void get_left_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);
 		void get_left_foot_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);
@@ -67,6 +71,8 @@ namespace walkman
                 void get_controlled_end_effector(bool& using_arm, bool& using_foot);
 		void set_controlled_end_effector(bool left_arm, bool left_foot);
 		
+                void get_rotation_radius();
+                
 		bool left_arm_controlled;
 		bool left_foot_controlled;
 		
@@ -75,9 +81,10 @@ namespace walkman
 		double hand_traj_time;
 		double foot_push_time;
 		double foot_release_time;
+                double foot_gas_time;
 		
 		double initialized_time;
-// 		
+		double rotation_radius;
 		
 	    };
 	}

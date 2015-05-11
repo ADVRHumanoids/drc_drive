@@ -74,9 +74,7 @@ namespace walkman
 		int status_seq_num;
 		
 		drive_msg drive_cmd;
-		
-		double steering_angle; //steering wheel angle in DEG
-		
+				
 		void control_law();
 		
 		robot_state_input input;

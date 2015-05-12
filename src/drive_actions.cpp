@@ -16,11 +16,11 @@
 #define RADIUS_INDEX 6
 
 #define STEERING_WHEEL_RADIUS 0.185
-#define HAND_HANDLE_OFFSET_X 0.125
-#define HAND_HANDLE_OFFSET_Y 0.025
-#define HAND_HANDLE_OFFSET_Z 0.05
+#define HAND_HANDLE_OFFSET_X 0.01
+#define HAND_HANDLE_OFFSET_Y 0.005
+#define HAND_HANDLE_OFFSET_Z 0.03
 
-#define HANDLE_LENGTH 0.17
+#define HANDLE_LENGTH 0.175
 #define HANDLE_INNER_RADIUS 0.05
 #define HANDLE_OUTER_RADIUS 0.08
 #define HANDLE_SAFETY_OFFSET_X 0.03
@@ -102,7 +102,6 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
 {
     KDL::Frame SteeringWheel_Handle;
     ref_frame = Frame;
-    steering_wheel_data[RADIUS_INDEX] = radius;
     if (ref_frame != "world")
     {
 	KDL::Frame Frame_data, Anchor_World, World_data, Anchor_Frame;
@@ -136,7 +135,7 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     // now adjusting the axis of the steering wheel to prepare them for the circular trajectories (X-axis facing the driver)
     world_SteeringWheel.M = world_SteeringWheel.M*KDL::Rotation::RotY(-90*DEG2RAD);
     
-    SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2,HANDLE_INNER_RADIUS,-DISTANCE_STEERINGWHEEL_HANDLE+HAND_HANDLE_OFFSET_Z);
+    SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2+HAND_HANDLE_OFFSET_X,0,-DISTANCE_STEERINGWHEEL_HANDLE-HAND_HANDLE_OFFSET_Z);
     SteeringWheel_Handle.M = KDL::Rotation::Identity();
     
     world_Handle = world_SteeringWheel*SteeringWheel_Handle;
@@ -167,7 +166,15 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
     hand_traj_time = 5.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
-    world_FinalLhand = world_Handle;
+    KDL::Frame Hand_rotation, Hand_translation;
+    
+    Hand_rotation.p = KDL::Vector::Zero();
+    Hand_rotation.M = KDL::Rotation::RotX(-steering_wheel_data[YAW_INDEX]);
+    
+    Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS+HAND_HANDLE_OFFSET_Y,0);
+    Hand_translation.M = KDL::Rotation::Identity();
+    
+    world_FinalLhand = world_Handle*Hand_rotation;//*Hand_translation;
     
     left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
     initialized_time=yarp::os::Time::now();

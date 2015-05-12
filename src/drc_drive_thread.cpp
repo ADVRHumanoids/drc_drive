@@ -196,11 +196,11 @@ void drc_drive_thread::init_actions(state new_state)
     }
     if ( new_state == state::turning_left)
     {
-	drive_traj.init_turning(-drive_cmd.angle, drive_cmd.full_circle_time);
+	drive_traj.init_turning(drive_cmd.angle, drive_cmd.full_circle_time);
     }
     if ( new_state == state::turning_right)
     {
-	drive_traj.init_turning(drive_cmd.angle, drive_cmd.full_circle_time);
+	drive_traj.init_turning(-drive_cmd.angle, drive_cmd.full_circle_time);
     }
     if ( new_state == state::accelerating)
     {

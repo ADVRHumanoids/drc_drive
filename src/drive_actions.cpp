@@ -23,7 +23,7 @@
 #define HANDLE_LENGTH 0.175
 #define HANDLE_INNER_RADIUS 0.05
 #define HANDLE_OUTER_RADIUS 0.08
-#define HANDLE_SAFETY_OFFSET_X 0.03
+#define HANDLE_SAFETY_OFFSET_X 0.04
 #define HANDLE_SAFETY_OFFSET_Y 0.01
 
 #define DISTANCE_STEERINGWHEEL_HANDLE 0.115
@@ -169,6 +169,7 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
     
     KDL::Frame Hand_rotation, Hand_translation;
     
+    //TODO fix rotation around X to be more precise
     Hand_rotation.p = KDL::Vector::Zero();
     Hand_rotation.M = KDL::Rotation::RotX(-steering_wheel_data[YAW_INDEX]);
     

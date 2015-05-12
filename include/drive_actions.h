@@ -86,6 +86,7 @@ namespace walkman
 		
 		double initialized_time;
 		double rotation_radius;
+		double steering_wheel_yaw;
 		
 	    };
 	}

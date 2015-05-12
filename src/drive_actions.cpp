@@ -24,7 +24,7 @@
 #define HANDLE_INNER_RADIUS 0.05
 #define HANDLE_OUTER_RADIUS 0.08
 #define HANDLE_SAFETY_OFFSET_X 0.03
-#define HANDLE_SAFETY_OFFSET_Y 0.02
+#define HANDLE_SAFETY_OFFSET_Y 0.01
 
 #define DISTANCE_STEERINGWHEEL_HANDLE 0.115
 
@@ -149,6 +149,7 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     std::cout<<"| yaw: "<<steering_wheel_data[YAW_INDEX]<<std::endl;
     std::cout<<"| radius: "<<steering_wheel_data[RADIUS_INDEX]<<std::endl;
     
+    steering_wheel_yaw = radius;
     return true;
 }
 
@@ -174,7 +175,7 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
     Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS+HAND_HANDLE_OFFSET_Y,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
-    world_FinalLhand = world_Handle*Hand_rotation;//*Hand_translation;
+    world_FinalLhand = world_Handle*Hand_rotation*Hand_translation;
     
     left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
     initialized_time=yarp::os::Time::now();
@@ -290,7 +291,7 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     
     KDL::Frame world_tempLhand, Lhand_translation;
     
-    Lhand_translation.p = KDL::Vector(HANDLE_LENGTH/2 + HANDLE_SAFETY_OFFSET_X,HANDLE_SAFETY_OFFSET_Y,0);
+    Lhand_translation.p = KDL::Vector(HANDLE_LENGTH/2+HANDLE_SAFETY_OFFSET_X,HANDLE_SAFETY_OFFSET_Y,0);
     Lhand_translation.M = KDL::Rotation::Identity();
     
     world_tempLhand = world_InitialLhand*Lhand_translation;    

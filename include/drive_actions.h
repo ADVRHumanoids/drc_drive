@@ -50,7 +50,7 @@ namespace walkman
 			   OpenSoT::tasks::velocity::Cartesian::Ptr 
  			);
 		
-		bool get_steering_wheel_data(std::string ReferenceFrame, KDL::Frame steering_wheel_data, double radius, iDynUtils& model_);
+		bool get_steering_wheel_data(std::string ReferenceFrame, KDL::Frame steering_wheel_data, iDynUtils& model_);
 		std::string ref_frame;
 		
 		// declaration of cartesian actions

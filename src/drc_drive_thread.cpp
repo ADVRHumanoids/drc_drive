@@ -250,7 +250,7 @@ void drc_drive_thread::run()
     if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA ) 
     {
 	std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Steering wheel data received ..." << std::endl;
-	drive_traj.get_steering_wheel_data(drive_cmd.frame, drive_cmd.drive_data, drive_cmd.radius, model);
+	drive_traj.get_steering_wheel_data(drive_cmd.frame, drive_cmd.drive_data, model);
     }
     if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_OPENING_HANDS) {
         if(!move_hands(0)) std::cout<<"Hands not available "<<std::endl;

@@ -98,7 +98,7 @@ void walkman::drc::drive::drive_actions::get_left_foot_cartesian_error(KDL::Vect
     compute_cartesian_error(world_CurrentLfoot,world_InitialLfoot,position_error,orientation_error);
 }
 
-bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Frame, KDL::Frame steering_wheel_data_, double radius, iDynUtils& model_)
+bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Frame, KDL::Frame steering_wheel_data_, iDynUtils& model_)
 {
     KDL::Frame SteeringWheel_Handle;
     ref_frame = Frame;
@@ -149,7 +149,6 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     std::cout<<"| yaw: "<<steering_wheel_data[YAW_INDEX]<<std::endl;
     std::cout<<"| radius: "<<steering_wheel_data[RADIUS_INDEX]<<std::endl;
     
-    steering_wheel_yaw = radius;
     return true;
 }
 

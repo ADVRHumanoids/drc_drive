@@ -284,6 +284,7 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     Hand_translation.p = KDL::Vector(HANDLE_LENGTH/2+HANDLE_SAFETY_OFFSET_X,HANDLE_INNER_RADIUS+HANDLE_SAFETY_OFFSET_Y,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
+    //TODO Manage better the starting frame (idea: use the frame of the hand but with X=0 so it doesn't depend on the hand position)
     world_tempLhand = world_InitialLhand*Hand_translation;
     world_FinalLhand = world_LhandHome;
       

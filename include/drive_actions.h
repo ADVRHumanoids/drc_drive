@@ -27,7 +27,7 @@ namespace walkman
 		KDL::Frame world_InitialLhand,world_InitialLfoot;
 		KDL::Frame world_FinalLhand,world_FinalLfoot;
 		KDL::Frame world_LhandHome, world_LfootHome;
-		KDL::Frame world_SteeringWheel;
+		KDL::Frame world_SteeringWheel, world_SteeringWheel_ZERO;
 		KDL::Frame world_Handle;
 		
 		// local sot tasks
@@ -54,8 +54,8 @@ namespace walkman
 		std::string ref_frame;
 		
 		// declaration of cartesian actions
-		bool init_aligning_hand();
-		bool perform_aligning_hand();
+		bool init_reaching();
+		bool perform_reaching();
 		
 		bool init_turning(double angle, double full_circle_time);
 		bool perform_turning();
@@ -86,8 +86,8 @@ namespace walkman
 		
 		double initialized_time;
 		double rotation_radius;
-		double steering_wheel_yaw;
 		
+		bool steeringwheel_init; // flag to save steeringwheel ZERO position
 	    };
 	}
     }

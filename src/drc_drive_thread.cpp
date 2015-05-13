@@ -40,10 +40,10 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready            ),
-	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND           ,    state::aligning_hand    ),
+	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching    	),
 	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::aligning_hand   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
+        std::make_tuple( state::reaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
@@ -57,7 +57,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     
     state_map[state::idle] = "idle";
     state_map[state::ready] = "ready";
-    state_map[state::aligning_hand] = "aligning_hand";
+    state_map[state::reaching] = "reaching";
     state_map[state::turning_left] = "turning_left";
     state_map[state::turning_right] = "turning_right";
     state_map[state::accelerating] = "accelerating";
@@ -190,9 +190,9 @@ void drc_drive_thread::init_actions(state new_state)
     if ( new_state == state::ready)
     {
     }
-    if ( new_state == state::aligning_hand)
+    if ( new_state == state::reaching)
     {
-	drive_traj.init_aligning_hand();
+	drive_traj.init_reaching();
     }
     if ( new_state == state::turning_left)
     {
@@ -226,8 +226,8 @@ void drc_drive_thread::run()
 	current_state = new_state;
     }
     
-    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ALIGN_HAND ) {
-        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Aligning hand with X normal wrt steering wheel ..." << std::endl;
+    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_REACH ) {
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Reaching the handle ..." << std::endl;
 	drive_traj.set_controlled_end_effector(true,false);
         if(!move_hands(0.1)) std::cout<<"Hands not available "<<std::endl;
     }
@@ -299,9 +299,9 @@ void drc_drive_thread::control_law()
     
     bool success=false;
     
-    if ( current_state == state::aligning_hand )
+    if ( current_state == state::reaching )
     {
-	if(!drive_traj.perform_aligning_hand()){ std::cout<<"ERROR ALIGNING HAND"<<std::endl; success=false;}
+	if(!drive_traj.perform_reaching()){ std::cout<<"ERROR REACHING"<<std::endl; success=false;}
 	else success=true;
     }
     if ( current_state == state::turning_left )

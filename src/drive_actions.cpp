@@ -16,14 +16,14 @@
 #define RADIUS_INDEX 6
 
 #define STEERING_WHEEL_RADIUS 0.185
-#define HAND_HANDLE_OFFSET_X 0.01
+#define HAND_HANDLE_OFFSET_X 0.02
 #define HAND_HANDLE_OFFSET_Y 0.005
-#define HAND_HANDLE_OFFSET_Z 0.03
+#define HAND_HANDLE_OFFSET_Z 0.05
 
-#define HANDLE_LENGTH 0.175
-#define HANDLE_INNER_RADIUS 0.05
-#define HANDLE_OUTER_RADIUS 0.08
-#define HANDLE_SAFETY_OFFSET_X 0.04
+#define HANDLE_LENGTH 0.185
+#define HANDLE_INNER_RADIUS 0.025
+#define HANDLE_OUTER_RADIUS 0.04
+#define HANDLE_SAFETY_OFFSET_X 0.05
 #define HANDLE_SAFETY_OFFSET_Y 0.01
 
 #define DISTANCE_STEERINGWHEEL_HANDLE 0.115
@@ -41,6 +41,9 @@ walkman::drc::drive::drive_actions::drive_actions()
     
     left_arm_controlled = false;
     left_foot_controlled = false;
+    
+    rotation_radius = DISTANCE_STEERINGWHEEL_HANDLE;
+    steeringwheel_init = false;
 }
 
 void walkman::drc::drive::drive_actions::set_controlled_end_effector(bool left_arm, bool left_foot)
@@ -99,7 +102,7 @@ void walkman::drc::drive::drive_actions::get_left_foot_cartesian_error(KDL::Vect
 }
 
 bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Frame, KDL::Frame steering_wheel_data_, iDynUtils& model_)
-{
+{    
     KDL::Frame SteeringWheel_Handle;
     ref_frame = Frame;
     if (ref_frame != "world")
@@ -135,10 +138,19 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     // now adjusting the axis of the steering wheel to prepare them for the circular trajectories (X-axis facing the driver)
     world_SteeringWheel.M = world_SteeringWheel.M*KDL::Rotation::RotY(-90*DEG2RAD);
     
-    SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2+HAND_HANDLE_OFFSET_X,0,-DISTANCE_STEERINGWHEEL_HANDLE-HAND_HANDLE_OFFSET_Z);
+    //TODO Check the following distance on each iteration
+    //SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2+HAND_HANDLE_OFFSET_X,0,-DISTANCE_STEERINGWHEEL_HANDLE-HAND_HANDLE_OFFSET_Z);
+    SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2,0,-DISTANCE_STEERINGWHEEL_HANDLE);
     SteeringWheel_Handle.M = KDL::Rotation::Identity();
     
     world_Handle = world_SteeringWheel*SteeringWheel_Handle;
+    
+    // saving the zero position of the steering wheel
+    if (!steeringwheel_init)
+    {
+      world_SteeringWheel_ZERO = world_SteeringWheel;
+      steeringwheel_init = true;
+    }
     
     std::cout<<"Steering Wheel Data Received:"<<std::endl;
     std::cout<<"| x: "<<steering_wheel_data[X_INDEX]<<std::endl;
@@ -155,12 +167,15 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
 void walkman::drc::drive::drive_actions::get_rotation_radius()
 {
     KDL::Frame world_CurrentLarm;
-    
     YarptoKDL(left_arm_task->getActualPose(), world_CurrentLarm);
+    
+    //TODO Fix the following frame difference: IT'S WRONG
     rotation_radius = fabs(world_CurrentLarm.p.Norm() - world_SteeringWheel.p.Norm());
+    std::cout<<"Rotation RADIUS: "<<rotation_radius<<std::endl;
+  
 }
 
-bool walkman::drc::drive::drive_actions::init_aligning_hand()
+bool walkman::drc::drive::drive_actions::init_reaching()
 {
     end_of_traj = false;
     hand_traj_time = 5.0;
@@ -169,13 +184,16 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
     KDL::Frame Hand_rotation, Hand_translation;
     
     //TODO fix rotation around X to be more precise
-    Hand_rotation.p = KDL::Vector::Zero();
-    Hand_rotation.M = KDL::Rotation::RotX(-steering_wheel_data[YAW_INDEX]);
+//     Hand_rotation.p = KDL::Vector::Zero();
+//     Hand_rotation.M = KDL::Rotation::RotX(-steering_wheel_data[YAW_INDEX]);
     
-    Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS+HAND_HANDLE_OFFSET_Y,0);
+    world_Handle.M = world_SteeringWheel_ZERO.M;
+    
+    //Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS+HAND_HANDLE_OFFSET_Y,0);
+    Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
-    world_FinalLhand = world_Handle*Hand_rotation*Hand_translation;
+    world_FinalLhand = world_Handle*Hand_translation;
     
     left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
     initialized_time=yarp::os::Time::now();
@@ -183,7 +201,7 @@ bool walkman::drc::drive::drive_actions::init_aligning_hand()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::perform_aligning_hand()
+bool walkman::drc::drive::drive_actions::perform_reaching()
 {
     auto time = yarp::os::Time::now()-initialized_time;
     KDL::Frame Xd_LH;

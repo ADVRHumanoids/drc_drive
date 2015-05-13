@@ -34,38 +34,54 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     //STATE MACHINE
     std::vector<std::tuple<state,std::string,state>> transition_table{
         //--------------initial state ----------+--------- command --------------------------------+------ final state--------- +
-        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready		),
+        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::data_received	),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching    	),
-        std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_APPROACH             ,    state::approaching    	),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
+        std::make_tuple( state::data_received	,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching    	),
+	//--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::reaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::reached          ),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::reached		,   WALKMAN_DRC_DRIVE_COMMAND_APPROACH             ,    state::approaching    	),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::approaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::approached	),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::approached  	,   WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS        ,    state::grasping		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::grasping  	,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE		   ,    state::ready		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready            ),
-	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
+	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS        ,    state::ungrasping	),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::reaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
-        //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::approaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
-        //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+	std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::turning_right   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::moving_away     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
-        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::ungrasping	,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE            ,    state::ungrasped	),
+	//--------------------------------------+--------------------------------------------------+----------------------------+
+	std::make_tuple( state::ungrasped	,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
+	//--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::moving_away     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_away	),
     };
     
     state_map[state::idle] = "idle";
     state_map[state::ready] = "ready";
+    state_map[state::data_received] = "data_received";
     state_map[state::reaching] = "reaching";
+    state_map[state::reached] = "reached";
     state_map[state::approaching] = "approaching";
+    state_map[state::approached] = "approached";
     state_map[state::turning_left] = "turning_left";
     state_map[state::turning_right] = "turning_right";
     state_map[state::accelerating] = "accelerating";
     state_map[state::moving_away] = "moving_away";
+    state_map[state::moved_away] = "moved_away";
+    state_map[state::grasping] = "grasping";
+    state_map[state::grasped] = "grasped";
+    state_map[state::ungrasping] = "ungrasping";
+    state_map[state::ungrasped] = "ungrasped";
     
     stateMachine.insert(transition_table);
     

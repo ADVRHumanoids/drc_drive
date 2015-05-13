@@ -64,14 +64,20 @@ namespace walkman
 	    enum class state {
                 idle,
                 ready,
+		data_received,
 		reaching,
+		reached,
 		approaching,
+		approached,
 		turning_left,
 		turning_right,
 		accelerating,
 		grasping,
+		grasped,
 		ungrasping,
-		moving_away
+		ungrasped,
+		moving_away,
+		moved_away
 	    };
 	}
     }

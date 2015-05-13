@@ -322,6 +322,7 @@ bool walkman::drc::drive::drive_actions::init_turning(double angle, double full_
     hand_traj_time = full_circle_time*abs(angle/360);  // time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
+    //TODO Fix center of rotation using world_SteeringWheel_ZERO
     left_arm_generator.circle_initialize(hand_traj_time, rotation_radius, angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
     
     // getting the hand target

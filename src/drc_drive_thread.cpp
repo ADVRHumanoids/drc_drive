@@ -36,14 +36,17 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         //--------------initial state ----------+--------- command --------------------------------+------ final state--------- +
         std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching    	),
+        std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_APPROACH             ,    state::approaching    	),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
 	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready            ),
-	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching    	),
 	std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::reaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::approaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready            ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
@@ -58,6 +61,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     state_map[state::idle] = "idle";
     state_map[state::ready] = "ready";
     state_map[state::reaching] = "reaching";
+    state_map[state::approaching] = "approaching";
     state_map[state::turning_left] = "turning_left";
     state_map[state::turning_right] = "turning_right";
     state_map[state::accelerating] = "accelerating";
@@ -194,6 +198,10 @@ void drc_drive_thread::init_actions(state new_state)
     {
 	drive_traj.init_reaching();
     }
+    if ( new_state == state::approaching)
+    {
+	drive_traj.init_approaching();
+    }
     if ( new_state == state::turning_left)
     {
 	drive_traj.init_turning(drive_cmd.angle, drive_cmd.full_circle_time);
@@ -230,6 +238,10 @@ void drc_drive_thread::run()
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Reaching the handle ..." << std::endl;
 	drive_traj.set_controlled_end_effector(true,false);
         if(!move_hands(0.1)) std::cout<<"Hands not available "<<std::endl;
+    }
+    if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_APPROACH ) {
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Approaching the handle ..." << std::endl;
+	drive_traj.set_controlled_end_effector(true,false);
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Accelerating ..." << std::endl;
@@ -302,6 +314,11 @@ void drc_drive_thread::control_law()
     if ( current_state == state::reaching )
     {
 	if(!drive_traj.perform_reaching()){ std::cout<<"ERROR REACHING"<<std::endl; success=false;}
+	else success=true;
+    }
+    if ( current_state == state::approaching )
+    {
+	if(!drive_traj.perform_approaching()){ std::cout<<"ERROR APPROACHING"<<std::endl; success=false;}
 	else success=true;
     }
     if ( current_state == state::turning_left )

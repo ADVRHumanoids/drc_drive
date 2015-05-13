@@ -57,6 +57,9 @@ namespace walkman
 		bool init_reaching();
 		bool perform_reaching();
 		
+		bool init_approaching();
+		bool perform_approaching();
+		
 		bool init_turning(double angle, double full_circle_time);
 		bool perform_turning();
 		

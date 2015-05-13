@@ -16,6 +16,11 @@
 #define RADIUS_INDEX 6
 
 #define STEERING_WHEEL_RADIUS 0.185
+
+#define HAND_HANDLE_REACHING_OFFSET_X 0.08
+#define HAND_HANDLE_REACHING_OFFSET_Y 0.08
+#define HAND_HANDLE_REACHING_OFFSET_Z 0
+
 #define HAND_HANDLE_OFFSET_X 0.02
 #define HAND_HANDLE_OFFSET_Y 0.005
 #define HAND_HANDLE_OFFSET_Z 0.05
@@ -23,8 +28,8 @@
 #define HANDLE_LENGTH 0.185
 #define HANDLE_INNER_RADIUS 0.025
 #define HANDLE_OUTER_RADIUS 0.04
-#define HANDLE_SAFETY_OFFSET_X 0.05
-#define HANDLE_SAFETY_OFFSET_Y 0.01
+#define HANDLE_SAFETY_OFFSET_X 0.08
+#define HANDLE_SAFETY_OFFSET_Y 0.03
 
 #define DISTANCE_STEERINGWHEEL_HANDLE 0.115
 
@@ -138,8 +143,6 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     // now adjusting the axis of the steering wheel to prepare them for the circular trajectories (X-axis facing the driver)
     world_SteeringWheel.M = world_SteeringWheel.M*KDL::Rotation::RotY(-90*DEG2RAD);
     
-    //TODO Check the following distance on each iteration
-    //SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2+HAND_HANDLE_OFFSET_X,0,-DISTANCE_STEERINGWHEEL_HANDLE-HAND_HANDLE_OFFSET_Z);
     SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2,0,-DISTANCE_STEERINGWHEEL_HANDLE);
     SteeringWheel_Handle.M = KDL::Rotation::Identity();
     
@@ -169,8 +172,7 @@ void walkman::drc::drive::drive_actions::get_rotation_radius()
     KDL::Frame world_CurrentLarm;
     YarptoKDL(left_arm_task->getActualPose(), world_CurrentLarm);
     
-    //TODO Fix the following frame difference: IT'S WRONG
-    rotation_radius = fabs(world_CurrentLarm.p.Norm() - world_SteeringWheel.p.Norm());
+    rotation_radius = (world_CurrentLarm.p - world_SteeringWheel.p).Norm();
     std::cout<<"Rotation RADIUS: "<<rotation_radius<<std::endl;
   
 }
@@ -178,18 +180,64 @@ void walkman::drc::drive::drive_actions::get_rotation_radius()
 bool walkman::drc::drive::drive_actions::init_reaching()
 {
     end_of_traj = false;
-    hand_traj_time = 5.0;
+    hand_traj_time = 4.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
-    KDL::Frame Hand_rotation, Hand_translation;
+    KDL::Frame Hand_translation_HIGH, Hand_translation_LOW, world_tempLhand;
     
-    //TODO fix rotation around X to be more precise
+//     KDL::Frame Hand_rotation;
 //     Hand_rotation.p = KDL::Vector::Zero();
 //     Hand_rotation.M = KDL::Rotation::RotX(-steering_wheel_data[YAW_INDEX]);
     
     world_Handle.M = world_SteeringWheel_ZERO.M;
     
-    //Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS+HAND_HANDLE_OFFSET_Y,0);
+    Hand_translation_HIGH.p = KDL::Vector(HAND_HANDLE_REACHING_OFFSET_X,HAND_HANDLE_REACHING_OFFSET_Y,0);
+    Hand_translation_HIGH.M = KDL::Rotation::Identity();
+    world_tempLhand = world_Handle*Hand_translation_HIGH;
+    
+    Hand_translation_LOW.p = KDL::Vector(0,HAND_HANDLE_REACHING_OFFSET_Y,0);
+    Hand_translation_LOW.M = KDL::Rotation::Identity();
+    world_FinalLhand = world_Handle*Hand_translation_LOW;
+    
+    left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_tempLhand);
+    left_arm_generator_bis.line_initialize(hand_traj_time,world_tempLhand,world_FinalLhand);
+    initialized_time=yarp::os::Time::now();
+    
+    return true;
+}
+
+bool walkman::drc::drive::drive_actions::perform_reaching()
+{
+    auto time = yarp::os::Time::now()-initialized_time;
+    KDL::Frame Xd_LH;
+    KDL::Twist dXd_LH;
+    
+    if (time <= hand_traj_time)
+      left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
+    else
+      left_arm_generator_bis.line_trajectory(time-hand_traj_time, Xd_LH, dXd_LH);
+    
+    left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
+    
+    if (!end_of_traj)
+    {
+      if (time >= hand_traj_time*2)
+        end_of_traj = true;
+    }
+    
+    return true;
+}
+
+bool walkman::drc::drive::drive_actions::init_approaching()
+{
+    end_of_traj = false;
+    hand_traj_time = 3.0;
+    YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
+    
+    KDL::Frame Hand_translation;
+    
+    world_Handle.M = world_SteeringWheel_ZERO.M;
+    
     Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
@@ -201,7 +249,7 @@ bool walkman::drc::drive::drive_actions::init_reaching()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::perform_reaching()
+bool walkman::drc::drive::drive_actions::perform_approaching()
 {
     auto time = yarp::os::Time::now()-initialized_time;
     KDL::Frame Xd_LH;
@@ -307,16 +355,16 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     hand_traj_time = 5.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
-    KDL::Frame world_tempLhand, Lhand_translation;
+    KDL::Frame Hand_translation;
+       
+    world_Handle.M = world_SteeringWheel_ZERO.M;
     
-    Lhand_translation.p = KDL::Vector(HANDLE_LENGTH/2+HANDLE_SAFETY_OFFSET_X,HANDLE_SAFETY_OFFSET_Y,0);
-    Lhand_translation.M = KDL::Rotation::Identity();
+    Hand_translation.p = KDL::Vector(HANDLE_LENGTH/2+HANDLE_SAFETY_OFFSET_X,HANDLE_INNER_RADIUS+HANDLE_SAFETY_OFFSET_Y,0);
+    Hand_translation.M = KDL::Rotation::Identity();
     
-    world_tempLhand = world_InitialLhand*Lhand_translation;    
-    world_FinalLhand = world_LhandHome;
+    world_FinalLhand = world_Handle*Hand_translation;
     
-    left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_tempLhand);
-    left_arm_generator_bis.line_initialize(hand_traj_time,world_tempLhand,world_FinalLhand);
+    left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
     initialized_time=yarp::os::Time::now();
     return true;
 }
@@ -327,16 +375,13 @@ bool walkman::drc::drive::drive_actions::perform_moving_away()
     KDL::Frame Xd_LH;
     KDL::Twist dXd_LH;
    
-    if (time <= hand_traj_time)
-      left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
-    else
-      left_arm_generator_bis.line_trajectory(time-hand_traj_time, Xd_LH, dXd_LH);
+    left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
     
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
     
     if (!end_of_traj)
     {
-      if (time >= hand_traj_time*2)
+      if (time >= hand_traj_time)
         end_of_traj = true;
     }
     

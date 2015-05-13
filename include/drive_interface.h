@@ -10,6 +10,7 @@
 
 #define WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA "steeringwheeldatasent"
 #define WALKMAN_DRC_DRIVE_COMMAND_REACH "reach"
+#define WALKMAN_DRC_DRIVE_COMMAND_APPROACH "approach"
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT "turn_left"
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT "turn_right"
 #define WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE "accelerate"
@@ -64,6 +65,7 @@ namespace walkman
                 idle,
                 ready,
 		reaching,
+		approaching,
 		turning_left,
 		turning_right,
 		accelerating,

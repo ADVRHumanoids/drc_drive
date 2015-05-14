@@ -290,12 +290,18 @@ void drc_drive_thread::run()
 	std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Steering wheel data received ..." << std::endl;
 	drive_traj.get_steering_wheel_data(drive_cmd.frame, drive_cmd.drive_data, model);
     }
-    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_GRASP ) {
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_OPEN_HANDS ) {
         if(!move_hands(0)) std::cout<<"Hands not available "<<std::endl;
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Opening hands ..." << std::endl;
+    }
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_CLOSE_HANDS ) {
+        if(!move_hands(1)) std::cout<<"Hands not available "<<std::endl;
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Closing hands ..." << std::endl;
+    }
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_GRASP ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Grasping ..." << std::endl;
     }
     if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_UNGRASP ) {
-        if(!move_hands(1)) std::cout<<"Hands not available "<<std::endl;
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Ungrasping ..." << std::endl;
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE ) {
@@ -346,6 +352,17 @@ void drc_drive_thread::control_law()
     {
 	if(!drive_traj.perform_approaching()){ std::cout<<"ERROR APPROACHING"<<std::endl; success=false;}
 	else success=true;
+    }
+    if ( current_state == state::grasping )
+    {
+	if(!move_hands(1)){ std::cout << " ERROR GRASPING: hands not available"<<std::endl; success=false;}
+	else success=true;
+    }
+    
+    if ( current_state == state::ungrasping )
+    {
+        if(!move_hands(0)){ std::cout << " ERROR GRASPING: hands not available"<<std::endl; success=false;}
+        else success=true;
     }
     if ( current_state == state::grasped )
     {

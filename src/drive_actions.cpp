@@ -167,7 +167,7 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
       Hand_translation.p = KDL::Vector(HANDLE_LENGTH+0.1,STEERING_WHEEL_RADIUS,0);
       Hand_translation.M = KDL::Rotation::Identity();
       
-      Center_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS,0);
+      Center_translation.p = KDL::Vector(HANDLE_LENGTH/2,HANDLE_INNER_RADIUS,0);
       Center_translation.M = KDL::Rotation::Identity();
       
       world_LhandHome = world_SteeringWheel_ZERO*Hand_translation;

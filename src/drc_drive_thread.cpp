@@ -69,7 +69,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         std::make_tuple( state::ungrasping      ,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE            ,    state::ungrasped        ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::ungrasped       ,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
-        std::make_tuple( state::ungrasped       ,   WALKMAN_DRC_DRIVE_COMMAND_GRASP                ,    state::ungrasping       ),
+        std::make_tuple( state::ungrasped       ,   WALKMAN_DRC_DRIVE_COMMAND_GRASP                ,    state::grasping         ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::moving_away     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_away       ),
         //--------------------------------------+--------------------------------------------------+----------------------------+

@@ -85,10 +85,6 @@ namespace walkman
 		
 		void init_actions(state new_state);
 		
-		// TODO add impedance control functions
-		
-		bool hands_in_position();
-		
 		yarp::sig::Vector q_left_desired,q_right_desired;
 			  
 		std::map<state,std::string> state_map;
@@ -155,6 +151,8 @@ namespace walkman
 		bool action_completed();
 		
 		bool move_hands(double close);
+                
+                bool hands_in_position();
 		
 		bool sense_hands(yarp::sig::Vector &q_left_hand, yarp::sig::Vector &q_right_hand);
 	    };

@@ -149,7 +149,16 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     
     world_Handle = world_SteeringWheel*SteeringWheel_Handle;
     
-    // saving the zero position of the steering wheel
+    std::cout<<"Steering Wheel Data Received:"<<std::endl;
+    std::cout<<"| x: "<<steering_wheel_data[X_INDEX]<<std::endl;
+    std::cout<<"| y: "<<steering_wheel_data[Y_INDEX]<<std::endl;
+    std::cout<<"| z: "<<steering_wheel_data[Z_INDEX]<<std::endl;
+    std::cout<<"| roll: "<<steering_wheel_data[ROLL_INDEX]<<std::endl;
+    std::cout<<"| pitch: "<<steering_wheel_data[PITCH_INDEX]<<std::endl;
+    std::cout<<"| yaw: "<<steering_wheel_data[YAW_INDEX]<<std::endl;
+    std::cout<<"| radius: "<<steering_wheel_data[RADIUS_INDEX]<<std::endl;
+    
+    // saving the zero position of the steering wheel 
     if (!steeringwheel_init)
     {
       world_SteeringWheel_ZERO = world_SteeringWheel;
@@ -165,16 +174,9 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
       world_CenterOfRotation = world_SteeringWheel_ZERO*Center_translation;
       
       steeringwheel_init = true;
+      
+      std::cout<<"Steering Wheel with Upright Axis stored!"<<std::endl;
     }
-    
-    std::cout<<"Steering Wheel Data Received:"<<std::endl;
-    std::cout<<"| x: "<<steering_wheel_data[X_INDEX]<<std::endl;
-    std::cout<<"| y: "<<steering_wheel_data[Y_INDEX]<<std::endl;
-    std::cout<<"| z: "<<steering_wheel_data[Z_INDEX]<<std::endl;
-    std::cout<<"| roll: "<<steering_wheel_data[ROLL_INDEX]<<std::endl;
-    std::cout<<"| pitch: "<<steering_wheel_data[PITCH_INDEX]<<std::endl;
-    std::cout<<"| yaw: "<<steering_wheel_data[YAW_INDEX]<<std::endl;
-    std::cout<<"| radius: "<<steering_wheel_data[RADIUS_INDEX]<<std::endl;
     
     return true;
 }
@@ -288,8 +290,7 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     Hand_translation.p = KDL::Vector(HANDLE_LENGTH/2+HANDLE_SAFETY_OFFSET_X,HANDLE_INNER_RADIUS+HANDLE_SAFETY_OFFSET_Y,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
-    //TODO Manage better the starting frame (idea: use the frame of the hand but with X=0 so it doesn't depend on the hand position)
-    world_tempLhand = world_InitialLhand*Hand_translation;
+    world_tempLhand = world_Handle*Hand_translation;
     world_FinalLhand = world_LhandHome;
       
     left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_tempLhand);

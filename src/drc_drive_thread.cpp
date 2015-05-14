@@ -73,7 +73,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::moving_away     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_away       ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::moved_away      ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready            ),
+        std::make_tuple( state::moved_away      ,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching         ),
         std::make_tuple( state::moved_away      ,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
     };
@@ -274,7 +274,7 @@ void drc_drive_thread::run()
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Approaching the handle ..." << std::endl;
 	drive_traj.set_controlled_end_effector(true,false);
     }
-    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_DRIVE ) 
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_DRIVE && current_state==state::driving_mode) 
     {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", DRIVING Mode started!" << std::endl;
         drive_traj.get_rotation_radius();

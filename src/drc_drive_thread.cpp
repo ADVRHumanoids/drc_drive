@@ -34,45 +34,52 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     //STATE MACHINE
     std::vector<std::tuple<state,std::string,state>> transition_table{
         //--------------initial state ----------+--------- command --------------------------------+------ final state--------- +
-        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::data_received	),
+        std::make_tuple( state::idle            ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::data_received	,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching    	),
+        std::make_tuple( state::ready		,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching    	),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::reaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::reached          ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::reached		,   WALKMAN_DRC_DRIVE_COMMAND_APPROACH             ,    state::approaching    	),
+        std::make_tuple( state::reached		,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away    	),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::approaching  	,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::approached	),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::approached  	,   WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS        ,    state::grasping		),
+        std::make_tuple( state::approached  	,   WALKMAN_DRC_DRIVE_COMMAND_GRASP		   ,    state::grasping		),
+        std::make_tuple( state::approached  	,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY		   ,    state::moving_away	),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::grasping  	,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE		   ,    state::ready		),
+        std::make_tuple( state::grasping  	,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE		   ,    state::grasped		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
-	std::make_tuple( state::ready           ,   WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS        ,    state::ungrasping	),
+        std::make_tuple( state::grasped  	,   WALKMAN_DRC_DRIVE_COMMAND_DRIVE		   ,    state::driving		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::driving         ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
+	std::make_tuple( state::driving         ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
+	std::make_tuple( state::driving         ,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
+	std::make_tuple( state::driving         ,   WALKMAN_DRC_DRIVE_COMMAND_UNGRASP		   ,    state::ungrasping	),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
-	std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+	std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::driving		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::turning_right   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+        std::make_tuple( state::turning_right   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::driving		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::ready		),
+        std::make_tuple( state::accelerating    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::driving		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::ungrasping	,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE            ,    state::ungrasped	),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
 	std::make_tuple( state::ungrasped	,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::moving_away     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_away	),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::moved_away      ,   WALKMAN_DRC_DRIVE_COMMAND_STEERING_WHEEL_DATA  ,    state::ready		),
+        //--------------------------------------+--------------------------------------------------+----------------------------+
     };
     
     state_map[state::idle] = "idle";
     state_map[state::ready] = "ready";
-    state_map[state::data_received] = "data_received";
     state_map[state::reaching] = "reaching";
     state_map[state::reached] = "reached";
     state_map[state::approaching] = "approaching";
     state_map[state::approached] = "approached";
+    state_map[state::driving] = "driving";
     state_map[state::turning_left] = "turning_left";
     state_map[state::turning_right] = "turning_right";
     state_map[state::accelerating] = "accelerating";
@@ -218,6 +225,9 @@ void drc_drive_thread::init_actions(state new_state)
     {
 	drive_traj.init_approaching();
     }
+    if ( new_state == state::driving)
+    {
+    }
     if ( new_state == state::turning_left)
     {
 	drive_traj.init_turning(drive_cmd.angle, drive_cmd.full_circle_time);
@@ -280,13 +290,13 @@ void drc_drive_thread::run()
 	std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Steering wheel data received ..." << std::endl;
 	drive_traj.get_steering_wheel_data(drive_cmd.frame, drive_cmd.drive_data, model);
     }
-    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_OPENING_HANDS) {
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_GRASP ) {
         if(!move_hands(0)) std::cout<<"Hands not available "<<std::endl;
-        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", opening the hands." << std::endl;
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Grasping ..." << std::endl;
     }
-    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_CLOSING_HANDS) {
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_UNGRASP ) {
         if(!move_hands(1)) std::cout<<"Hands not available "<<std::endl;
-        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", closing the hands." << std::endl;
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Ungrasping ..." << std::endl;
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Hand done" << std::endl;
@@ -336,6 +346,12 @@ void drc_drive_thread::control_law()
     {
 	if(!drive_traj.perform_approaching()){ std::cout<<"ERROR APPROACHING"<<std::endl; success=false;}
 	else success=true;
+    }
+    if ( current_state == state::grasped )
+    {
+	drive_traj.get_rotation_radius();
+	current_state=stateMachine.evolve_state_machine(current_state,WALKMAN_DRC_DRIVE_COMMAND_DRIVE);
+	success=true;
     }
     if ( current_state == state::turning_left )
     {

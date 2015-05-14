@@ -184,7 +184,7 @@ void walkman::drc::drive::drive_actions::get_rotation_radius()
     KDL::Frame world_CurrentLarm;
     YarptoKDL(left_arm_task->getActualPose(), world_CurrentLarm);
     
-    rotation_radius = (world_CurrentLarm.p - world_SteeringWheel.p).Norm();
+    rotation_radius = (world_CurrentLarm.p - world_CenterOfRotation.p).Norm();
     std::cout<<"Rotation RADIUS: "<<rotation_radius<<std::endl;
   
 }

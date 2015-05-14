@@ -51,6 +51,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         std::make_tuple( state::grasping  	,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE		   ,    state::grasped		),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::grasped  	,   WALKMAN_DRC_DRIVE_COMMAND_DRIVE		   ,    state::driving		),
+        std::make_tuple( state::grasped  	,   WALKMAN_DRC_DRIVE_COMMAND_UNGRASP		   ,    state::ungrasping	),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::driving         ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT            ,    state::turning_left     ),
 	std::make_tuple( state::driving         ,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
@@ -66,6 +67,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         std::make_tuple( state::ungrasping	,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE            ,    state::ungrasped	),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
 	std::make_tuple( state::ungrasped	,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
+	std::make_tuple( state::ungrasped	,   WALKMAN_DRC_DRIVE_COMMAND_GRASP            	   ,    state::ungrasping      ),
 	//--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::moving_away     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_away	),
         //--------------------------------------+--------------------------------------------------+----------------------------+
@@ -227,6 +229,7 @@ void drc_drive_thread::init_actions(state new_state)
     }
     if ( new_state == state::driving)
     {
+       std::cout<<"Now you can start DRIVING!" << std::endl;
     }
     if ( new_state == state::turning_left)
     {

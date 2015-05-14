@@ -28,6 +28,7 @@ namespace walkman
 		KDL::Frame world_FinalLhand,world_FinalLfoot;
 		KDL::Frame world_LhandHome, world_LfootHome;
 		KDL::Frame world_SteeringWheel, world_SteeringWheel_ZERO;
+		KDL::Frame world_CenterOfRotation;
 		KDL::Frame world_Handle;
 		
 		// local sot tasks

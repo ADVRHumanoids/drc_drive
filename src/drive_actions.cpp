@@ -154,11 +154,15 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     {
       world_SteeringWheel_ZERO = world_SteeringWheel;
       
-      KDL::Frame Hand_translation;
+      KDL::Frame Hand_translation, Center_translation;
       Hand_translation.p = KDL::Vector(HANDLE_LENGTH+0.1,STEERING_WHEEL_RADIUS,0);
       Hand_translation.M = KDL::Rotation::Identity();
       
+      Center_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS,0);
+      Center_translation.M = KDL::Rotation::Identity();
+      
       world_LhandHome = world_SteeringWheel_ZERO*Hand_translation;
+      world_CenterOfRotation = world_SteeringWheel_ZERO*Center_translation;
       
       steeringwheel_init = true;
     }
@@ -323,7 +327,7 @@ bool walkman::drc::drive::drive_actions::init_turning(double angle, double full_
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
     //TODO Fix center of rotation using world_SteeringWheel_ZERO
-    left_arm_generator.circle_initialize(hand_traj_time, rotation_radius, angle*DEG2RAD, world_InitialLhand, world_SteeringWheel);
+    left_arm_generator.circle_initialize(hand_traj_time, rotation_radius, angle*DEG2RAD, world_InitialLhand, world_CenterOfRotation);
     
     // getting the hand target
     KDL::Twist dummy;

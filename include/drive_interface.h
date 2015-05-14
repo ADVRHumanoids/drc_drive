@@ -16,6 +16,7 @@
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT "turn_right"
 #define WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE "accelerate"
 #define WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY "move_away"
+#define WALKMAN_DRC_DRIVE_C0MMAND_RESET "reset"
 
 #define WALKMAN_DRC_DRIVE_COMMAND_GRASP "grasp"
 #define WALKMAN_DRC_DRIVE_COMMAND_UNGRASP "ungrasp"
@@ -69,7 +70,7 @@ namespace walkman
 		reached,
 		approaching,
 		approached,
-		driving,
+		driving_mode,
 		turning_left,
 		turning_right,
 		accelerating,

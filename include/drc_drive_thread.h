@@ -83,7 +83,7 @@ namespace walkman
 		
 		state current_state;
 		
-		void init_actions(state new_state);
+		void init_actions(state new_state, state last_state);
 		
 		yarp::sig::Vector q_left_desired,q_right_desired;
 			  

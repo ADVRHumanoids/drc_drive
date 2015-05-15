@@ -70,7 +70,7 @@ namespace walkman
 		reached,
 		approaching,
 		approached,
-		driving_mode,
+		drive,
 		turning_left,
 		turning_right,
 		accelerating,

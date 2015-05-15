@@ -144,7 +144,7 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     // now adjusting the axis of the steering wheel to prepare them for the circular trajectories (X-axis facing the driver)
     world_SteeringWheel.M = world_SteeringWheel.M*KDL::Rotation::RotY(-90*DEG2RAD);
     
-    SteeringWheel_Handle.p = KDL::Vector(HANDLE_LENGTH/2,0,-DISTANCE_STEERINGWHEEL_HANDLE);
+    SteeringWheel_Handle.p = KDL::Vector(0,0,-DISTANCE_STEERINGWHEEL_HANDLE);
     SteeringWheel_Handle.M = KDL::Rotation::Identity();
     
     world_Handle = world_SteeringWheel*SteeringWheel_Handle;
@@ -163,16 +163,11 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
     {
       world_SteeringWheel_ZERO = world_SteeringWheel;
       
-      KDL::Frame Hand_translation, Center_translation;
+      KDL::Frame Hand_translation;
       Hand_translation.p = KDL::Vector(HANDLE_LENGTH+0.1,STEERING_WHEEL_RADIUS,0);
       Hand_translation.M = KDL::Rotation::Identity();
       
-      Center_translation.p = KDL::Vector(HANDLE_LENGTH/2,HANDLE_INNER_RADIUS,0);
-      Center_translation.M = KDL::Rotation::Identity();
-      
-      world_LhandHome = world_SteeringWheel_ZERO*Hand_translation;
-      world_CenterOfRotation = world_SteeringWheel_ZERO*Center_translation;
-      
+      world_LhandHome = world_SteeringWheel_ZERO*Hand_translation;     
       steeringwheel_init = true;
       
       std::cout<<"Steering Wheel with Upright Axis stored!"<<std::endl;
@@ -183,10 +178,18 @@ bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Fra
 
 void walkman::drc::drive::drive_actions::get_rotation_radius()
 {
-    KDL::Frame world_CurrentLarm;
-    YarptoKDL(left_arm_task->getActualPose(), world_CurrentLarm);
+    KDL::Frame world_CurrentLhand, Center_translation, Handle_Hand, world_Handle_uprightAxis;
+    YarptoKDL(left_arm_task->getActualPose(), world_CurrentLhand);
     
-    rotation_radius = (world_CurrentLarm.p - world_CenterOfRotation.p).Norm();
+    world_Handle_uprightAxis = world_Handle;
+    world_Handle_uprightAxis.M = world_SteeringWheel_ZERO.M;    
+    Handle_Hand = world_Handle_uprightAxis.Inverse()*world_CurrentLhand;
+    
+    Center_translation.p = Handle_Hand.p;
+    Center_translation.M = KDL::Rotation::Identity();
+    world_CenterOfRotation = world_SteeringWheel_ZERO*Center_translation;
+    
+    rotation_radius = (world_CurrentLhand.p - world_CenterOfRotation.p).Norm();
     std::cout<<"Rotation RADIUS: "<<rotation_radius<<std::endl;
   
 }
@@ -201,11 +204,11 @@ bool walkman::drc::drive::drive_actions::init_reaching()
     
     world_Handle.M = world_SteeringWheel_ZERO.M;
     
-    Hand_translation_HIGH.p = KDL::Vector(HAND_HANDLE_REACHING_OFFSET_X,HAND_HANDLE_REACHING_OFFSET_Y,0);
+    Hand_translation_HIGH.p = KDL::Vector((HANDLE_LENGTH/2)+HAND_HANDLE_REACHING_OFFSET_X,HAND_HANDLE_REACHING_OFFSET_Y,0);
     Hand_translation_HIGH.M = KDL::Rotation::Identity();
     world_tempLhand = world_Handle*Hand_translation_HIGH;
     
-    Hand_translation_LOW.p = KDL::Vector(0.02,HAND_HANDLE_REACHING_OFFSET_Y,0);
+    Hand_translation_LOW.p = KDL::Vector(HANDLE_LENGTH/2+0.02,HAND_HANDLE_REACHING_OFFSET_Y,0);
     Hand_translation_LOW.M = KDL::Rotation::Identity();
     world_FinalLhand = world_Handle*Hand_translation_LOW;
     
@@ -248,7 +251,7 @@ bool walkman::drc::drive::drive_actions::init_approaching()
     
     world_Handle.M = world_SteeringWheel_ZERO.M;
     
-    Hand_translation.p = KDL::Vector(0,HANDLE_INNER_RADIUS,0);
+    Hand_translation.p = KDL::Vector(HANDLE_LENGTH/2,HANDLE_INNER_RADIUS,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
     world_FinalLhand = world_Handle*Hand_translation;
@@ -290,6 +293,8 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     Hand_translation.p = KDL::Vector(HANDLE_LENGTH/2+HANDLE_SAFETY_OFFSET_X,HANDLE_INNER_RADIUS+HANDLE_SAFETY_OFFSET_Y,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
+    //TODO first trajectory should depend on the position of the actual handle position (and thus of the hand), not on the world_Handle frame
+    //NOTE see get_rotation_radius()
     world_tempLhand = world_Handle*Hand_translation;
     world_FinalLhand = world_LhandHome;
       
@@ -327,7 +332,6 @@ bool walkman::drc::drive::drive_actions::init_turning(double angle, double full_
     hand_traj_time = full_circle_time*abs(angle/360);  // time is parametrized wrt the commanded angle
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
-    //TODO Fix center of rotation using world_SteeringWheel_ZERO
     left_arm_generator.circle_initialize(hand_traj_time, rotation_radius, angle*DEG2RAD, world_InitialLhand, world_CenterOfRotation);
     
     // getting the hand target

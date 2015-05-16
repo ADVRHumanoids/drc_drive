@@ -298,8 +298,14 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     world_tempLhand = world_Handle*Hand_translation;
     world_FinalLhand = world_LhandHome;
       
-    left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_tempLhand);
-    left_arm_generator_bis.line_initialize(hand_traj_time,world_tempLhand,world_FinalLhand);
+    if (!move_away_directly)
+    {
+      left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_tempLhand);
+      left_arm_generator_bis.line_initialize(hand_traj_time,world_tempLhand,world_FinalLhand);
+    }
+    else
+      left_arm_generator.line_initialize(hand_traj_time,world_InitialLhand,world_FinalLhand);
+    
     initialized_time=yarp::os::Time::now();
     return true;
 }
@@ -309,17 +315,28 @@ bool walkman::drc::drive::drive_actions::perform_moving_away()
     auto time = yarp::os::Time::now()-initialized_time;
     KDL::Frame Xd_LH;
     KDL::Twist dXd_LH;
+    double time_f;
    
-    if (time <= hand_traj_time)
-      left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
+    if (!move_away_directly)
+    {
+      if (time <= hand_traj_time)
+	left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
+      else
+	left_arm_generator_bis.line_trajectory(time-hand_traj_time, Xd_LH, dXd_LH);
+      
+      time_f = hand_traj_time*2;
+    }
     else
-      left_arm_generator_bis.line_trajectory(time-hand_traj_time, Xd_LH, dXd_LH);
+    {
+      left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
+      time_f = hand_traj_time;
+    }
     
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
     
     if (!end_of_traj)
     {
-      if (time >= hand_traj_time*2)
+      if (time >= time_f)
         end_of_traj = true;
     }
     

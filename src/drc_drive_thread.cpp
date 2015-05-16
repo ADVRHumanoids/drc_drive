@@ -249,6 +249,11 @@ void drc_drive_thread::init_actions(state new_state, state last_state)
     }
     if ( new_state == state::moving_away)
     {
+	if ( last_state == state::ready )
+	  drive_traj.move_away_directly = true;
+	else
+	  drive_traj.move_away_directly = false;
+	
 	drive_traj.init_moving_away();
     }
 }

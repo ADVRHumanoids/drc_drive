@@ -82,6 +82,7 @@ namespace walkman
 		bool left_foot_controlled;
 		
 		bool end_of_traj;
+		bool move_away_directly;
 		
 		double hand_traj_time;
 		double foot_push_time;

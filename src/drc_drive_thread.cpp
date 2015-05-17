@@ -275,7 +275,6 @@ void drc_drive_thread::run()
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_REACH ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Reaching the handle ..." << std::endl;
 	drive_traj.set_controlled_end_effector(true,false);
-        if(!move_hands(0.1)) std::cout<<"Hands not available "<<std::endl;
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_APPROACH ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Approaching the handle ..." << std::endl;

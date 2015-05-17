@@ -201,11 +201,11 @@ bool walkman::drc::drive::drive_actions::init_reaching()
     
     world_Handle.M = world_SteeringWheel_ZERO.M;
     
-    Hand_translation_HIGH.p = KDL::Vector((HANDLE_LENGTH/2)+HAND_HANDLE_REACHING_OFFSET_X,HAND_HANDLE_REACHING_OFFSET_Y,0);
+    Hand_translation_HIGH.p = KDL::Vector(HANDLE_LENGTH/2 + HAND_HANDLE_REACHING_OFFSET_X, HAND_HANDLE_REACHING_OFFSET_Y, 0);
     Hand_translation_HIGH.M = KDL::Rotation::Identity();
     world_tempLhand = world_Handle*Hand_translation_HIGH;
     
-    Hand_translation_LOW.p = KDL::Vector(HANDLE_LENGTH/2+HAND_HANDLE_OFFSET_X,HAND_HANDLE_REACHING_OFFSET_Y,0);
+    Hand_translation_LOW.p = KDL::Vector(HANDLE_LENGTH/2 + HAND_HANDLE_OFFSET_X, HAND_HANDLE_REACHING_OFFSET_Y, 0);
     Hand_translation_LOW.M = KDL::Rotation::Identity();
     world_FinalLhand = world_Handle*Hand_translation_LOW;
     
@@ -419,6 +419,16 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     }
    
     return true;
+}
+
+bool walkman::drc::drive::drive_actions::init_moving_foot()
+{
+
+}
+
+bool walkman::drc::drive::drive_actions::perform_moving_foot()
+{
+
 }
 
 

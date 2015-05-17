@@ -59,6 +59,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         std::make_tuple( state::drive    	,   WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT           ,    state::turning_right    ),
         std::make_tuple( state::drive    	,   WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE           ,    state::accelerating     ),
         std::make_tuple( state::drive    	,   WALKMAN_DRC_DRIVE_COMMAND_UNGRASP              ,    state::ungrasping       ),
+	std::make_tuple( state::drive           ,   WALKMAN_DRC_DRIVE_C0MMAND_MOVE_FOOT            ,    state::moving_foot      ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::turning_left    ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::drive     	),
         //--------------------------------------+--------------------------------------------------+----------------------------+
@@ -76,6 +77,8 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         std::make_tuple( state::moved_away      ,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching         ),
         std::make_tuple( state::moved_away      ,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY            ,    state::moving_away      ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::moving_foot     ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_foot       ),
+        
     };
     
     state_map[state::idle] = "idle";
@@ -94,7 +97,8 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     state_map[state::grasped] = "grasped";
     state_map[state::ungrasping] = "ungrasping";
     state_map[state::ungrasped] = "ungrasped";
-    
+    state_map[state::moving_foot] = "moving_foot";
+    state_map[state::moved_foot] = "moved_foot";
     stateMachine.insert(transition_table);
     
     walkman::drc::draw_state_machine<state,std::string> drawer;
@@ -256,6 +260,10 @@ void drc_drive_thread::init_actions(state new_state, state last_state)
 	
 	drive_traj.init_moving_away();
     }
+    if ( new_state == state::moving_foot)
+    {
+	drive_traj.init_moving_foot();
+    }
 }
 
 void drc_drive_thread::run()
@@ -404,6 +412,11 @@ void drc_drive_thread::control_law()
     if ( current_state == state::moving_away )
     {
 	if(!drive_traj.perform_moving_away()){ std::cout<<"ERROR MOVING_AWAY"<<std::endl; success=false;}
+	else success=true;
+    }
+    if ( current_state == state::moving_foot )
+    {
+	if(!drive_traj.perform_moving_foot()){ std::cout<<"ERROR MOVING_AWAY"<<std::endl; success=false;}
 	else success=true;
     }
     

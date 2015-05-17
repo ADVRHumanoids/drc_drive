@@ -70,6 +70,9 @@ namespace walkman
 		bool init_moving_away();
 		bool perform_moving_away();
 		
+		bool init_moving_foot();
+		bool perform_moving_foot();
+		
 		void get_left_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);
 		void get_left_foot_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);
 		

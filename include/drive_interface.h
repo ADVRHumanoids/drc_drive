@@ -17,6 +17,7 @@
 #define WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE "accelerate"
 #define WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY "move_away"
 #define WALKMAN_DRC_DRIVE_C0MMAND_RESET "reset"
+#define WALKMAN_DRC_DRIVE_C0MMAND_MOVE_FOOT "move_foot"
 
 #define WALKMAN_DRC_DRIVE_COMMAND_GRASP "grasp"
 #define WALKMAN_DRC_DRIVE_COMMAND_UNGRASP "ungrasp"
@@ -79,7 +80,9 @@ namespace walkman
 		ungrasping,
 		ungrasped,
 		moving_away,
-		moved_away
+		moved_away,
+		moving_foot,
+		moved_foot
 	    };
 	}
     }

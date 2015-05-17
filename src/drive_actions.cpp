@@ -200,7 +200,7 @@ bool walkman::drc::drive::drive_actions::init_reaching()
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     
     world_FinalLfoot.p = world_InitialLfoot.p;
-    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(-ACCELERATION_SAFETY_ANGLE);
+    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(-ACCELERATION_SAFETY_ANGLE*DEG2RAD);
     left_foot_generator_push.line_initialize(hand_traj_time,world_InitialLfoot,world_FinalLfoot);
     
     KDL::Frame Hand_translation_HIGH, Hand_translation_LOW, world_tempLhand;
@@ -230,14 +230,14 @@ bool walkman::drc::drive::drive_actions::perform_reaching()
     
     if (time <= hand_traj_time){
       left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
-      left_foot_generator_release.line_trajectory(time, Xd_LF, dXd_LF);
+      left_foot_generator_push.line_trajectory(time, Xd_LF, dXd_LF);
+      left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
     }
     else
       left_arm_generator_bis.line_trajectory(time-hand_traj_time, Xd_LH, dXd_LH);
     
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
-    left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
-    
+
     if (!end_of_traj)
     {
       if (time >= hand_traj_time*2)

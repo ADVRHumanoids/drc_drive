@@ -228,7 +228,7 @@ void drc_drive_thread::init_actions(state new_state, state last_state)
     }
     if ( new_state == state::reaching)
     {
-	drive_traj.init_reaching();
+	drive_traj.init_reaching(drive_cmd.foot_rotation);
     }
     if ( new_state == state::approaching)
     {

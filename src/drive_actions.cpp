@@ -291,16 +291,16 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     end_of_traj = false;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
     
-    KDL::Frame Hand_translation, world_tempLhand, SteeringWheel_Hand;
+    KDL::Frame Hand_translation, world_tempLhand, SteeringWheel_Hand_proj;
     
-    SteeringWheel_Hand = world_SteeringWheel_ZERO.Inverse()*world_InitialLhand;
-    // zeroing the X component is like projecting the hand frame on the steering wheel YZ plane
-    SteeringWheel_Hand.p(X_INDEX) = 0;
+    SteeringWheel_Hand_proj = world_SteeringWheel_ZERO.Inverse()*world_InitialLhand;
+    SteeringWheel_Hand_proj.p(X_INDEX) = 0; // zeroing the X component is like projecting the hand frame on the steering wheel YZ plane
+    SteeringWheel_Hand_proj.M = KDL::Rotation::Identity();
     
-    Hand_translation.p = KDL::Vector(HANDLE_LENGTH+HANDLE_SAFETY_OFFSET_X,HANDLE_SAFETY_OFFSET_Y,0) + SteeringWheel_Hand.p;
+    Hand_translation.p = KDL::Vector(HANDLE_LENGTH+HANDLE_SAFETY_OFFSET_X,HANDLE_SAFETY_OFFSET_Y,0);
     Hand_translation.M = KDL::Rotation::Identity();
     
-    world_tempLhand = world_SteeringWheel_ZERO*Hand_translation;
+    world_tempLhand = world_SteeringWheel_ZERO*SteeringWheel_Hand_proj*Hand_translation;
     world_FinalLhand = world_LhandHome;
       
     if (!move_away_directly)

@@ -33,6 +33,7 @@
 #define HANDLE_SAFETY_OFFSET_Y 0.04
 
 #define DISTANCE_STEERINGWHEEL_HANDLE 0.115
+#define ACCELERATION_SAFETY_ANGLE 5
 
 walkman::drc::drive::drive_actions::drive_actions()
 {
@@ -196,6 +197,11 @@ bool walkman::drc::drive::drive_actions::init_reaching()
     end_of_traj = false;
     hand_traj_time = 4.0;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
+    YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
+    
+    world_FinalLfoot.p = world_InitialLfoot.p;
+    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(-ACCELERATION_SAFETY_ANGLE);
+    left_foot_generator_push.line_initialize(hand_traj_time,world_InitialLfoot,world_FinalLfoot);
     
     KDL::Frame Hand_translation_HIGH, Hand_translation_LOW, world_tempLhand;
     
@@ -219,15 +225,18 @@ bool walkman::drc::drive::drive_actions::init_reaching()
 bool walkman::drc::drive::drive_actions::perform_reaching()
 {
     auto time = yarp::os::Time::now()-initialized_time;
-    KDL::Frame Xd_LH;
-    KDL::Twist dXd_LH;
+    KDL::Frame Xd_LH, Xd_LF;
+    KDL::Twist dXd_LH, dXd_LF;
     
-    if (time <= hand_traj_time)
+    if (time <= hand_traj_time){
       left_arm_generator.line_trajectory(time, Xd_LH, dXd_LH);
+      left_foot_generator_release.line_trajectory(time, Xd_LF, dXd_LF);
+    }
     else
       left_arm_generator_bis.line_trajectory(time-hand_traj_time, Xd_LH, dXd_LH);
     
     left_arm_task->setReference(KDLtoYarp_position(Xd_LH));
+    left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
     
     if (!end_of_traj)
     {

@@ -15,9 +15,9 @@
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_LEFT "turn_left"
 #define WALKMAN_DRC_DRIVE_COMMAND_TURN_RIGHT "turn_right"
 #define WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE "accelerate"
-#define WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY "move_away"
+#define WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY_HAND "move_away_hand"
+#define WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY_FOOT "move_away_foot"
 #define WALKMAN_DRC_DRIVE_C0MMAND_RESET "reset"
-#define WALKMAN_DRC_DRIVE_C0MMAND_MOVE_FOOT "move_foot"
 
 #define WALKMAN_DRC_DRIVE_COMMAND_GRASP "grasp"
 #define WALKMAN_DRC_DRIVE_COMMAND_UNGRASP "ungrasp"
@@ -34,7 +34,6 @@
 #define WALKMAN_DRC_DRIVE_STATUS_TURN_LEFT "turning_left"
 #define WALKMAN_DRC_DRIVE_STATUS_TURN_RIGHT "turning_right"
 #define WALKMAN_DRC_DRIVE_STATUS_ACCELERATE "accelerating"
-#define WALKMAN_DRC_DRIVE_STATUS_MOVE_AWAY "moving_away"
 #define WALKMAN_DRC_DRIVE_STATUS_GRASPING "grasping"
 #define WALKMAN_DRC_DRIVE_STATUS_GRASPED "grasped"
 
@@ -79,10 +78,10 @@ namespace walkman
 		grasped,
 		ungrasping,
 		ungrasped,
-		moving_away,
-		moved_away,
-		moving_foot,
-		moved_foot
+		moving_away_hand,
+		moved_away_hand,
+		moving_away_foot,
+		moved_away_foot
 	    };
 	}
     }

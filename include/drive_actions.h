@@ -67,11 +67,11 @@ namespace walkman
 		bool init_accelerating(double gas_time);
 		bool perform_accelerating();
 		
-		bool init_moving_away();
-		bool perform_moving_away();
+		bool init_moving_away_hand();
+		bool perform_moving_away_hand();
 		
-		bool init_moving_foot();
-		bool perform_moving_foot();
+		bool init_moving_away_foot();
+		bool perform_moving_away_foot();
 		
 		void get_left_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);
 		void get_left_foot_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);

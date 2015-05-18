@@ -101,8 +101,7 @@ void walkman::drc::drive::drive_actions::get_left_foot_cartesian_error(KDL::Vect
 {    
     KDL::Frame world_CurrentLfoot;
     YarptoKDL(left_foot_task->getActualPose(),world_CurrentLfoot);
-    // using world_InitialLfoot as target because we want the foot to return to the starting position after pusing gas pedal
-    compute_cartesian_error(world_CurrentLfoot,world_InitialLfoot,position_error,orientation_error);
+    compute_cartesian_error(world_CurrentLfoot,world_FinalLfoot,position_error,orientation_error);
 }
 
 bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Frame, KDL::Frame steering_wheel_data_, iDynUtils& model_)
@@ -396,11 +395,15 @@ bool walkman::drc::drive::drive_actions::init_accelerating(double gas_time)
     double left_foot_pitch = 15*DEG2RAD;
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     
-    world_FinalLfoot.p = world_InitialLfoot.p;
-    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(left_foot_pitch);
+    KDL::Frame world_tempLfoot;
     
-    left_foot_generator_push.line_initialize(foot_push_time,world_InitialLfoot,world_FinalLfoot);
-    left_foot_generator_release.line_initialize(foot_release_time,world_FinalLfoot,world_InitialLfoot);
+    world_tempLfoot.p = world_InitialLfoot.p;
+    world_tempLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(left_foot_pitch);
+    
+    world_FinalLfoot = world_InitialLfoot;
+    
+    left_foot_generator_push.line_initialize(foot_push_time,world_InitialLfoot,world_tempLfoot);
+    left_foot_generator_release.line_initialize(foot_release_time,world_tempLfoot,world_FinalLfoot);
     initialized_time=yarp::os::Time::now();
     
     return true;

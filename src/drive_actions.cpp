@@ -433,7 +433,7 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
 bool walkman::drc::drive::drive_actions::init_moving_away_foot()
 {
     end_of_traj = false;
-    foot_release_time = 0.5;
+    foot_release_time = 3.0;
 
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     

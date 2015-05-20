@@ -100,8 +100,7 @@ void walkman::drc::drive::drive_actions::get_left_foot_cartesian_error(KDL::Vect
 {    
     KDL::Frame world_CurrentLfoot;
     YarptoKDL(left_foot_task->getActualPose(),world_CurrentLfoot);
-    // using world_InitialLfoot as target because we want the foot to return to the starting position after pusing gas pedal
-    compute_cartesian_error(world_CurrentLfoot,world_InitialLfoot,position_error,orientation_error);
+    compute_cartesian_error(world_CurrentLfoot,world_FinalLfoot,position_error,orientation_error);
 }
 
 bool walkman::drc::drive::drive_actions::get_steering_wheel_data(std::string Frame, KDL::Frame steering_wheel_data_, iDynUtils& model_)
@@ -285,7 +284,7 @@ bool walkman::drc::drive::drive_actions::perform_approaching()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::init_moving_away()
+bool walkman::drc::drive::drive_actions::init_moving_away_hand()
 {
     end_of_traj = false;
     YarptoKDL(left_arm_task->getActualPose(), world_InitialLhand);
@@ -318,7 +317,7 @@ bool walkman::drc::drive::drive_actions::init_moving_away()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::perform_moving_away()
+bool walkman::drc::drive::drive_actions::perform_moving_away_hand()
 {
     auto time = yarp::os::Time::now()-initialized_time;
     KDL::Frame Xd_LH;
@@ -395,11 +394,15 @@ bool walkman::drc::drive::drive_actions::init_accelerating(double gas_time)
     double left_foot_pitch = 15*DEG2RAD;
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     
-    world_FinalLfoot.p = world_InitialLfoot.p;
-    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(left_foot_pitch);
+    KDL::Frame world_tempLfoot;
     
-    left_foot_generator_push.line_initialize(foot_push_time,world_InitialLfoot,world_FinalLfoot);
-    left_foot_generator_release.line_initialize(foot_release_time,world_FinalLfoot,world_InitialLfoot);
+    world_tempLfoot.p = world_InitialLfoot.p;
+    world_tempLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(left_foot_pitch);
+    
+    world_FinalLfoot = world_InitialLfoot;
+    
+    left_foot_generator_push.line_initialize(foot_push_time,world_InitialLfoot,world_tempLfoot);
+    left_foot_generator_release.line_initialize(foot_release_time,world_tempLfoot,world_FinalLfoot);
     initialized_time=yarp::os::Time::now();
     
     return true;
@@ -429,14 +432,40 @@ bool walkman::drc::drive::drive_actions::perform_accelerating()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::init_moving_foot()
+bool walkman::drc::drive::drive_actions::init_moving_away_foot()
 {
+    end_of_traj = false;
+    foot_release_time = 3.0;
 
+    YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
+    
+    world_FinalLfoot.p = world_InitialLfoot.p;
+    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(-15*DEG2RAD);
+    
+    left_foot_generator_release.line_initialize(foot_release_time,world_InitialLfoot,world_FinalLfoot);
+    initialized_time=yarp::os::Time::now();
+    
+    return true;
 }
 
-bool walkman::drc::drive::drive_actions::perform_moving_foot()
+bool walkman::drc::drive::drive_actions::perform_moving_away_foot()
 {
-
+    auto time = yarp::os::Time::now()-initialized_time;
+    KDL::Frame Xd_LF;
+    KDL::Twist dXd_LF;
+   
+    left_foot_generator_release.line_trajectory(time, Xd_LF, dXd_LF);
+    
+    Xd_LF.p = world_InitialLfoot.p;
+    left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
+    
+    if (!end_of_traj)
+    {
+      if (time >= foot_release_time)
+	end_of_traj = true;
+    }
+   
+    return true;
 }
 
 

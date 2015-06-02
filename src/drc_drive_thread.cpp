@@ -27,7 +27,6 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     control_thread( module_prefix, rf, ph ),
     command_interface( module_prefix ),
     status_interface( module_prefix ),
-    q_left_desired(1),q_right_desired(1),
     drive_traj()
 {
 
@@ -108,6 +107,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
 
     current_state = state::idle;
 
+    q_hands_desired.resize(2);
     seq_num = 0;
     status_seq_num = 0;
 }
@@ -127,8 +127,16 @@ bool drc_drive_thread::custom_init()
     else
 	status_interface.setStatus( "ready" );	
 
-    // sense
-    robot.sense(input.q, input.q_dot, input.tau);
+    //-- using new walkmaninterface --//
+    wb_input_q=robot.sensePositionRefFeedback();
+    input.q.resize(robot.getNumberOfKinematicJoints());
+    output.q.resize(robot.getNumberOfKinematicJoints());
+    wb_output_q.resize(robot.getNumberOfActuatedJoints()); 
+    for(int i=0;i<input.q.size();i++) input.q[i]=wb_input_q[i]; //hands not considered
+    
+    left_hand_input_q = wb_input_q[robot.left_hand_index];
+    right_hand_input_q = wb_input_q[robot.right_hand_index];    
+    
     auto max = model.iDyn3_model.getJointBoundMax();
     auto min = model.iDyn3_model.getJointBoundMin();
     for (int i=0;i<input.q.size();i++)
@@ -142,9 +150,9 @@ bool drc_drive_thread::custom_init()
             std::cout<<"error: "<<model.getJointNames().at(i)<<"("<<input.q[i]<<") is outside minimum bound: "<<min[i]<<std::endl;
         }
     }
-    // initializing output.q to current position
+    
     output.q = input.q;
-
+    
     // update model and com_model
     //model.iDyn3_model.setFloatingBaseLink(model.right_leg.end_effector_index);
     model.switchAnchorAndFloatingBase("Waist");
@@ -206,16 +214,7 @@ bool drc_drive_thread::custom_init()
     
     solver = OpenSoT::solvers::QPOases_sot_Ptr( new OpenSoT::solvers::QPOases_sot(stack, bounds) );
     
-    // set the robot controlled in position
-    robot.left_arm.setPositionDirectMode();
-    robot.left_leg.setPositionDirectMode();
-    // hands in position with a ref speed
-    if(robot.left_hand.isAvailable) { 
-		robot.left_hand.setPositionDirectMode();
-    }
-    if(robot.right_hand.isAvailable) { 
-		robot.right_hand.setPositionDirectMode();
-    }
+    
     
     drive_traj.init(left_arm_task,left_foot_task);
     
@@ -229,7 +228,7 @@ void drc_drive_thread::init_actions(state new_state, state last_state)
     }
     if ( new_state == state::reaching)
     {
-	drive_traj.init_reaching();
+	drive_traj.init_reaching(drive_cmd.foot_rotation);
     }
     if ( new_state == state::approaching)
     {
@@ -364,7 +363,6 @@ void drc_drive_thread::run()
 
 void drc_drive_thread::sense()
 {
-  // open loop, uses values computed by the solver the previous step
   input.q = output.q;
 }
 
@@ -434,12 +432,16 @@ void drc_drive_thread::control_law()
 }
 
 void drc_drive_thread::move()
-{   
-    yarp::sig::Vector q_torso(3), q_left_arm(7), q_right_arm(7), q_left_leg(6), q_right_leg(6), q_head(2);
-    robot.fromIdynToRobot(output.q, q_right_arm, q_left_arm, q_torso, q_right_leg, q_left_leg, q_head);
+{       
+    yarp::sig::Vector q_torso(3), q_left_arm(7), q_left_arm_real(7), q_right_arm(7), q_left_leg(6), q_right_leg(6), q_head(2);
+    yarp::sig::Vector q_torso_ini(3), q_left_arm_ini(7), q_left_arm_real_ini(7), q_right_arm_ini(7), q_left_leg_ini(6), q_right_leg_ini(6), q_head_ini(2);
+    robot.fromIdynToRobot31(output.q, q_right_arm, q_left_arm, q_torso, q_right_leg, q_left_leg, q_head);
     
-    robot.left_leg.move(q_left_leg);
-    robot.left_arm.move(q_left_arm);
+    robot.fromIdynToRobot31(wb_input_q, q_right_arm_ini, q_left_arm_ini, q_torso_ini, q_right_leg_ini, q_left_leg_ini, q_head_ini);
+    
+    yarp::sig::Vector q_move(robot.getNumberOfActuatedJoints());
+    robot.fromRobotToIdyn29(q_right_arm_ini, q_left_arm, q_torso_ini, q_right_leg_ini, q_left_leg, q_move);
+    robot.move29(q_move);
 }
 
 bool drc_drive_thread::action_completed()
@@ -487,7 +489,7 @@ bool drc_drive_thread::hands_in_position()
         yarp::sig::Vector q_right(1);
         sense_hands(q_left, q_right);
         
-        if ( fabs(q_left[0]-q_left_desired[0]) < 0.1 &&  fabs(q_right[0]-q_right_desired[0]) < 0.1 ) return true;       
+        if ( fabs(q_left[0]-q_hands_desired[1]) < 0.1 &&  fabs(q_right[0]-q_hands_desired[0]) < 0.1 ) return true;       
         return false;
     }
     return true;
@@ -502,9 +504,9 @@ bool drc_drive_thread::move_hands(double close)
 {	
       if(close <= 1.0 && close >= 0.0)
       {
-            q_left_desired   = MIN_CLOSURE + close*(MAX_CLOSURE - MIN_CLOSURE); 
-	    q_right_desired = MIN_CLOSURE;
-            robot.moveHands(q_left_desired,q_right_desired);
+            q_hands_desired[1]   = MIN_CLOSURE + close*(MAX_CLOSURE - MIN_CLOSURE); 
+	    q_hands_desired[0] = MIN_CLOSURE;
+            robot.moveHands(q_hands_desired[1], q_hands_desired[0]);
             return true;
       }
       return false;

@@ -55,7 +55,7 @@ namespace walkman
 		std::string ref_frame;
 		
 		// declaration of cartesian actions
-		bool init_reaching();
+		bool init_reaching(double foot_rotation);
 		bool perform_reaching();
 		
 		bool init_approaching();

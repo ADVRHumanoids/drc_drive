@@ -85,7 +85,10 @@ namespace walkman
 		
 		void init_actions(state new_state, state last_state);
 		
-		yarp::sig::Vector q_left_desired,q_right_desired;
+		yarp::sig::Vector wb_input_q, wb_output_q;
+		yarp::sig::Vector left_hand_input_q, right_hand_input_q;
+		yarp::sig::Vector q_hands_desired;
+
 			  
 		std::map<state,std::string> state_map;
 		

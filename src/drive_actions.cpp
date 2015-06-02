@@ -33,7 +33,6 @@
 #define HANDLE_SAFETY_OFFSET_Y 0.04
 
 #define DISTANCE_STEERINGWHEEL_HANDLE 0.115
-#define ACCELERATION_SAFETY_ANGLE 5
 
 walkman::drc::drive::drive_actions::drive_actions()
 {
@@ -191,7 +190,7 @@ void walkman::drc::drive::drive_actions::get_rotation_radius()
   
 }
 
-bool walkman::drc::drive::drive_actions::init_reaching()
+bool walkman::drc::drive::drive_actions::init_reaching(double foot_rotation)
 {
     end_of_traj = false;
     hand_traj_time = 4.0;
@@ -199,7 +198,7 @@ bool walkman::drc::drive::drive_actions::init_reaching()
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     
     world_FinalLfoot.p = world_InitialLfoot.p;
-    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(-ACCELERATION_SAFETY_ANGLE*DEG2RAD);
+    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(foot_rotation*DEG2RAD);
     left_foot_generator_push.line_initialize(hand_traj_time,world_InitialLfoot,world_FinalLfoot);
     
     KDL::Frame Hand_translation_HIGH, Hand_translation_LOW, world_tempLhand;

@@ -79,14 +79,8 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::moving_away_foot,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_away_foot  ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
-        std::make_tuple( state::reached         ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
-        std::make_tuple( state::approached      ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
-        std::make_tuple( state::grasped         ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
         std::make_tuple( state::drive           ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
-        std::make_tuple( state::ungrasped       ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
-        std::make_tuple( state::moved_away_hand ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
-        std::make_tuple( state::moved_away_foot ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
-        
+        std::make_tuple( state::rotating_foot   ,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::drive            ),
         
     };
     

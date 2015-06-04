@@ -469,6 +469,7 @@ bool walkman::drc::drive::drive_actions::init_rotating_foot(double foot_rotation
 
 bool walkman::drc::drive::drive_actions::perform_rotating_foot()
 {
+    double Tf = 1.0;
     auto time = yarp::os::Time::now()-initialized_time;
     KDL::Frame Xd_LF;
     KDL::Twist dXd_LF;
@@ -480,7 +481,7 @@ bool walkman::drc::drive::drive_actions::perform_rotating_foot()
     
     if (!end_of_traj)
     {
-      if (time >= foot_release_time)
+      if (time >= Tf)
 	end_of_traj = true;
     }
    

@@ -139,6 +139,7 @@ bool drc_drive_thread::custom_init()
     
     auto max = model.iDyn3_model.getJointBoundMax();
     auto min = model.iDyn3_model.getJointBoundMin();
+    max[18]=-0.002;
     for (int i=0;i<input.q.size();i++)
     {
         if (input.q[i]>max[i])
@@ -188,10 +189,11 @@ bool drc_drive_thread::custom_init()
     second_cartesian_tasks_list.push_back(left_arm_task);
     second_cartesian_tasks = OpenSoT::tasks::Aggregated::Ptr( new OpenSoT::tasks::Aggregated( second_cartesian_tasks_list,input.q.size()));
 
+    
     // constraints initialization
     joint_bounds = JointLimits::Ptr( new JointLimits(input.q, 
-						      model.iDyn3_model.getJointBoundMax(),
-						      model.iDyn3_model.getJointBoundMin()));
+						      max,
+						      min));
     
     velocity_bounds = VelocityLimits::Ptr( new VelocityLimits(   0.7, 
 								static_cast<double>(get_thread_period())/1000.0, 

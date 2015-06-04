@@ -55,7 +55,7 @@ namespace walkman
 		std::string ref_frame;
 		
 		// declaration of cartesian actions
-		bool init_reaching(double foot_rotation);
+		bool init_reaching();
 		bool perform_reaching();
 		
 		bool init_approaching();
@@ -64,7 +64,7 @@ namespace walkman
 		bool init_turning(double angle, double full_circle_time);
 		bool perform_turning();
 		
-		bool init_accelerating(double gas_time);
+		bool init_accelerating(double gas_time, double gas_angle);
 		bool perform_accelerating();
 		
 		bool init_moving_away_hand();
@@ -72,6 +72,9 @@ namespace walkman
 		
 		bool init_moving_away_foot();
 		bool perform_moving_away_foot();
+		
+		bool init_rotating_foot(double foot_rotation);
+		bool perform_rotating_foot();
 		
 		void get_left_arm_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);
 		void get_left_foot_cartesian_error(KDL::Vector& position_error, KDL::Vector& orientation_error);

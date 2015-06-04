@@ -190,7 +190,7 @@ void walkman::drc::drive::drive_actions::get_rotation_radius()
   
 }
 
-bool walkman::drc::drive::drive_actions::init_reaching(double foot_rotation)
+bool walkman::drc::drive::drive_actions::init_reaching()
 {
     end_of_traj = false;
     hand_traj_time = 4.0;
@@ -198,7 +198,7 @@ bool walkman::drc::drive::drive_actions::init_reaching(double foot_rotation)
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     
     world_FinalLfoot.p = world_InitialLfoot.p;
-    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(foot_rotation*DEG2RAD);
+    world_FinalLfoot.M = world_InitialLfoot.M;
     left_foot_generator_push.line_initialize(hand_traj_time,world_InitialLfoot,world_FinalLfoot);
     
     KDL::Frame Hand_translation_HIGH, Hand_translation_LOW, world_tempLhand;
@@ -384,14 +384,14 @@ bool walkman::drc::drive::drive_actions::perform_turning()
     return true;
 }
 
-bool walkman::drc::drive::drive_actions::init_accelerating(double gas_time)
+bool walkman::drc::drive::drive_actions::init_accelerating(double gas_time, double gas_angle)
 {        
     end_of_traj = false;
     foot_push_time = 0.5;
     foot_release_time = 0.5;
     foot_gas_time = gas_time;
     
-    double left_foot_pitch = 15*DEG2RAD;
+    double left_foot_pitch = gas_angle*DEG2RAD;
     YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
     
     KDL::Frame world_tempLfoot;
@@ -449,6 +449,42 @@ bool walkman::drc::drive::drive_actions::init_moving_away_foot()
 }
 
 bool walkman::drc::drive::drive_actions::perform_moving_away_foot()
+{
+    auto time = yarp::os::Time::now()-initialized_time;
+    KDL::Frame Xd_LF;
+    KDL::Twist dXd_LF;
+   
+    left_foot_generator_release.line_trajectory(time, Xd_LF, dXd_LF);
+    
+    Xd_LF.p = world_InitialLfoot.p;
+    left_foot_task->setReference(KDLtoYarp_position(Xd_LF));
+    
+    if (!end_of_traj)
+    {
+      if (time >= foot_release_time)
+	end_of_traj = true;
+    }
+   
+    return true;
+}
+
+bool walkman::drc::drive::drive_actions::init_rotating_foot(double foot_rotation)
+{
+    end_of_traj = false;
+    double Tf = 1.0;
+
+    YarptoKDL(left_foot_task->getActualPose(), world_InitialLfoot);
+    
+    world_FinalLfoot.p = world_InitialLfoot.p;
+    world_FinalLfoot.M = world_InitialLfoot.M*KDL::Rotation::RotY(foot_rotation*DEG2RAD);
+    
+    left_foot_generator_release.line_initialize(Tf,world_InitialLfoot,world_FinalLfoot);
+    initialized_time=yarp::os::Time::now();
+    
+    return true;
+}
+
+bool walkman::drc::drive::drive_actions::perform_rotating_foot()
 {
     auto time = yarp::os::Time::now()-initialized_time;
     KDL::Frame Xd_LF;

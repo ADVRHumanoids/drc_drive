@@ -48,6 +48,7 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::approached      ,   WALKMAN_DRC_DRIVE_COMMAND_GRASP                ,    state::grasping         ),
         std::make_tuple( state::approached      ,   WALKMAN_DRC_DRIVE_COMMAND_MOVE_AWAY_HAND       ,    state::moving_away_hand ),
+        std::make_tuple( state::approached      ,   WALKMAN_DRC_DRIVE_COMMAND_REACH                ,    state::reaching         ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::grasping        ,   WALKMAN_DRC_DRIVE_COMMAND_HAND_DONE            ,    state::grasped          ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
@@ -78,6 +79,14 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
         //--------------------------------------+--------------------------------------------------+----------------------------+
         std::make_tuple( state::moving_away_foot,   WALKMAN_DRC_DRIVE_COMMAND_ACTION_DONE          ,    state::moved_away_foot  ),
         //--------------------------------------+--------------------------------------------------+----------------------------+
+        std::make_tuple( state::reached         ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
+        std::make_tuple( state::approached      ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
+        std::make_tuple( state::grasped         ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
+        std::make_tuple( state::drive           ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
+        std::make_tuple( state::ungrasped       ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
+        std::make_tuple( state::moved_away_hand ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
+        std::make_tuple( state::moved_away_foot ,   WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT          ,    state::rotating_foot    ),
+        
         
     };
     
@@ -87,6 +96,8 @@ drc_drive_thread::drc_drive_thread( std::string module_prefix,
     state_map[state::reached] = "reached";
     state_map[state::approaching] = "approaching";
     state_map[state::approached] = "approached";
+    state_map[state::rotating_foot] = "rotating_foot";
+    state_map[state::rotated_foot] = "rotated_foot";
     state_map[state::drive] = "drive";
     state_map[state::turning_left] = "turning_left";
     state_map[state::turning_right] = "turning_right";
@@ -124,8 +135,6 @@ bool drc_drive_thread::custom_init()
     // notify the ready status
     if(status_definitions.status_to_code.count("ready"))
 	status_interface.setStatus(status_definitions.status_to_code.at("ready") , status_seq_num++);
-    else
-	status_interface.setStatus( "ready" );	
 
     //-- using new walkmaninterface --//
     wb_input_q=robot.sensePositionRefFeedback();
@@ -228,9 +237,13 @@ void drc_drive_thread::init_actions(state new_state, state last_state)
     if ( new_state == state::ready)
     {
     }
+    if ( new_state == state::rotating_foot)
+    {
+	drive_traj.init_rotating_foot(drive_cmd.foot_rotation);
+    }
     if ( new_state == state::reaching)
     {
-	drive_traj.init_reaching(drive_cmd.foot_rotation);
+	drive_traj.init_reaching();
     }
     if ( new_state == state::approaching)
     {
@@ -251,7 +264,7 @@ void drc_drive_thread::init_actions(state new_state, state last_state)
     }
     if ( new_state == state::accelerating)
     {
-	drive_traj.init_accelerating(drive_cmd.gas_time);
+	drive_traj.init_accelerating(drive_cmd.gas_time, drive_cmd.gas_angle);
     }
     if ( new_state == state::moving_away_hand)
     {
@@ -298,6 +311,10 @@ void drc_drive_thread::run()
     {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Steering wheel ZERO FLAG reset" << std::endl;
         drive_traj.steeringwheel_init = false;
+    }
+    if (drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ROTATE_FOOT) 
+    {
+        std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Setting the foot in the right position" << std::endl;
     }
     if ( drive_cmd.command == WALKMAN_DRC_DRIVE_COMMAND_ACCELERATE ) {
         std::cout << "Command ["<<seq_num<<"]: "<<drive_cmd.command<<", Accelerating ..." << std::endl;
@@ -359,8 +376,6 @@ void drc_drive_thread::run()
     
     if(status_definitions.status_to_code.count(state_map.at(current_state)))
 	status_interface.setStatus(status_definitions.status_to_code.at(state_map.at(current_state)) , status_seq_num++);
-    else
-	status_interface.setStatus(state_map[current_state] , status_seq_num++);
 }    
 
 void drc_drive_thread::sense()
@@ -382,6 +397,11 @@ void drc_drive_thread::control_law()
     if ( current_state == state::reaching )
     {
 	if(!drive_traj.perform_reaching()){ std::cout<<"ERROR REACHING"<<std::endl; success=false;}
+	else success=true;
+    }
+    if ( current_state == state::rotating_foot )
+    {
+	if(!drive_traj.perform_rotating_foot()){ std::cout<<"ERROR ROTATING FOOT"<<std::endl; success=false;}
 	else success=true;
     }
     if ( current_state == state::approaching )
